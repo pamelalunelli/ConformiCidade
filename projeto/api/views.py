@@ -116,13 +116,16 @@ def processar_formulario(request):
             print("este é o proprietario_data", proprietario_data)
 
             equipamento_data.pop('id_equipamento', None)
-            #equipamento_data['id_modeloDinamico_id'] = id
+            #equipamento_data['id_modeloDinamico'] = id
+            equipamento_data.pop('id_modeloDinamico', None)
             equipamentoPublico = EquipamentoPublico(**equipamento_data)
             geometria_data.pop('id_geom', None)
-            #geometria_data['id_modeloDinamico_id'] = id
+            #geometria_data['id_modeloDinamico'] = id
+            geometria_data.pop('id_modeloDinamico', None)
             geometria = Geometria(**geometria_data)
             proprietario_data.pop('id_proprietario', None)
-            #proprietario_data['id_modeloDinamico_id'] = id
+            #proprietario_data['id_modeloDinamico'] = id
+            proprietario_data.pop('id_modeloDinamico', None)
             proprietario = Proprietario(**proprietario_data)
 
             print("TESTE2")
