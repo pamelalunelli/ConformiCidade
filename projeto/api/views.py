@@ -15,7 +15,7 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from .forms import CSVUploadForm
-from .models import ModeloDinamico, EquipamentoPublico, Geometria, Proprietario, RRR, Imovel
+from .models import ModeloDinamico, EquipamentoPublico, Geometria, Proprietario
 from .serializers import CustomUserSerializer
 from .db_utils import createTable
 from django.views.decorators.csrf import csrf_exempt
@@ -83,7 +83,7 @@ def userData(request, id):
     return JsonResponse(fieldsName, safe=False)
 
 def defaultDataTable(request):
-    models = [EquipamentoPublico, Geometria, Proprietario, RRR, Imovel]
+    models = [EquipamentoPublico, Geometria, Proprietario]
 
     tables = []
 
@@ -100,42 +100,50 @@ def defaultDataTable(request):
 
     return JsonResponse(tables, safe=False)
 
+@csrf_exempt
 def processar_formulario(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
 
-            equipamento_data = data.get('equipamento', {})
-            geometria_data = data.get('geometria', {})
-            proprietario_data = data.get('proprietario', {})
-            rrr_data = data.get('rrr', {})
-            imovel_data = data.get('imovel', {})
+            equipamento_data = data.get('EquipamentoPublico', {})
+            geometria_data = data.get('Geometria', {})
+            proprietario_data = data.get('Proprietario', {})
+            
+            print("TESTE1")
+            print("este é o equipamento_data", equipamento_data)
+            print("este é o geometria_data", geometria_data)
+            print("este é o proprietario_data", proprietario_data)
 
+            equipamento_data.pop('id_equipamento', None)
+            #equipamento_data['id_modeloDinamico_id'] = id
             equipamentoPublico = EquipamentoPublico(**equipamento_data)
+            geometria_data.pop('id_geom', None)
+            #geometria_data['id_modeloDinamico_id'] = id
             geometria = Geometria(**geometria_data)
+            proprietario_data.pop('id_proprietario', None)
+            #proprietario_data['id_modeloDinamico_id'] = id
             proprietario = Proprietario(**proprietario_data)
-            rrr = RRR(**rrr_data)
+
+            print("TESTE2")
+            print("este é o equipamentoPublico", equipamentoPublico)
+            print("este é o geometria", geometria)
+            print("este é o proprietario", proprietario)
 
             equipamentoPublico.save()
             geometria.save()
             proprietario.save()
-            rrr.save()
 
-            imovel = Imovel.objects.create(
-                endereco=imovel_data.get('endereco', ''),
-                tipo=imovel_data.get('tipo', ''),
-                area=imovel_data.get('area', ''),
-                proprietario=proprietario,
-                rrr=rrr,
-                equipamento_publico=equipamentoPublico,
-                geometria=geometria,
-            )
-
+            print("TESTE3")
+            
             return JsonResponse({'status': 'success'})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
     else:
         return JsonResponse({'status': 'error', 'message': 'Método não permitido'})
+
+def showPopulatedRegister (request, id):
+    return 0
 
 def userHistory(request):
     return JsonResponse(list(ModeloDinamico.objects.values()), safe=False)

@@ -6,6 +6,7 @@ urlpatterns = [
     path('lista_objetos/<int:id>/', views.userData, name='user_data'),
     path('campos_tabelas/', views.defaultDataTable, name='defaultDataTable'),
     path('processar_formulario/', views.processar_formulario, name='processar_formulario'),
+    path('showPopulatedRegister/', views.showPopulatedRegister, name='showPopulatedRegister'),
     path('userHistory/', views.userHistory, name='userHistory'),
     path('userHistory/<int:id>/delete/', views.userHistoryDelete, name='userHistoryDelete'),
     path('userHistory/<int:id>/edit/', views.userHistoryEdit, name='userHistoryEdit'),

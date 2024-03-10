@@ -289,7 +289,7 @@ declare class TileGrid {
     /**
      * Get a tile coordinate given a map coordinate and zoom level.
      * @param {import("../coordinate.js").Coordinate} coordinate Coordinate.
-     * @param {number} z Zoom level.
+     * @param {number} z Integer zoom level, e.g. the result of a `getZForResolution()` method call
      * @param {import("../tilecoord.js").TileCoord} [opt_tileCoord] Destination import("../tilecoord.js").TileCoord object.
      * @return {import("../tilecoord.js").TileCoord} Tile coordinate.
      * @api
@@ -311,9 +311,9 @@ declare class TileGrid {
     getTileSize(z: number): number | import("../size.js").Size;
     /**
      * @param {number} z Zoom level.
-     * @return {import("../TileRange.js").default} Extent tile range for the specified zoom level.
+     * @return {import("../TileRange.js").default|null} Extent tile range for the specified zoom level.
      */
-    getFullTileRange(z: number): import("../TileRange.js").default;
+    getFullTileRange(z: number): import("../TileRange.js").default | null;
     /**
      * @param {number} resolution Resolution.
      * @param {number|import("../array.js").NearestDirectionFunction} [opt_direction]

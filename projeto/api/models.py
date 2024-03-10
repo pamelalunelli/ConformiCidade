@@ -9,36 +9,22 @@ class ModeloDinamico(models.Model):
 
 class EquipamentoPublico(models.Model):
     id_equipamento = models.AutoField(primary_key=True)
+    id_modeloDinamico = models.ForeignKey(ModeloDinamico, on_delete=models.CASCADE, null=True, blank=True)
     nome = models.CharField(max_length=20, null=True, blank=True)
     tipo = models.CharField(max_length=20, null=True, blank=True)
 
 class Geometria(models.Model):
     id_geom = models.AutoField(primary_key=True)
+    id_modeloDinamico = models.ForeignKey(ModeloDinamico, on_delete=models.CASCADE, null=True, blank=True)
     centroide = models.CharField(max_length=20, null=True, blank=True)
     area = models.CharField(max_length=20, null=True, blank=True)
 
 class Proprietario(models.Model):
     id_proprietario = models.AutoField(primary_key=True)
+    id_modeloDinamico = models.ForeignKey(ModeloDinamico, on_delete=models.CASCADE, null=True, blank=True)
     nome = models.CharField(max_length=20, null=True, blank=True)
-    data_nasc = models.DateField(null=True, blank=True)
+    data_nasc = models.CharField(max_length=20, null=True, blank=True)
     cpf = models.CharField(max_length=20, null=True, blank=True)
-
-class RRR(models.Model):
-    id_RRR = models.AutoField(primary_key=True)
-    tipo = models.CharField(max_length=20, null=True, blank=True)
-    descricao = models.CharField(max_length=20, null=True, blank=True)
-    data_inicio = models.DateField(null=True, blank=True)
-    data_termino = models.DateField(null=True, blank=True)
-
-class Imovel(models.Model):
-    id_imovel = models.AutoField(primary_key=True)
-    endereco = models.CharField(max_length=20, null=True, blank=True)
-    tipo = models.CharField(max_length=20, null=True, blank=True)
-    area = models.CharField(max_length=20, null=True, blank=True)
-    proprietario = models.ForeignKey(Proprietario, on_delete=models.CASCADE, null=True, blank=True)
-    rrr = models.ForeignKey(RRR, on_delete=models.CASCADE, null=True, blank=True)
-    equipamento_publico = models.ForeignKey(EquipamentoPublico, on_delete=models.CASCADE, null=True, blank=True)
-    geometria = models.ForeignKey(Geometria, on_delete=models.CASCADE, null=True, blank=True)
 
 class AdminUser(models.Model):
     id = models.AutoField(primary_key=True)
