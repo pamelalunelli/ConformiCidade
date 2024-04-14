@@ -1,2 +1,4 @@
 .vercel
 settings.py
+*.pyc
+/venv/
