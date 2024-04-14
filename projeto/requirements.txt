@@ -11,3 +11,5 @@ coverage
 environs
 whitenoise
 gunicorn
+xhtml2pdf
+textdistance

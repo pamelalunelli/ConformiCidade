@@ -18,7 +18,10 @@ from .forms import CSVUploadForm
 from .models import ModeloDinamico, EquipamentoPublico, Geometria, Proprietario
 from .serializers import CustomUserSerializer
 from .db_utils import createTable
-from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import render
+from django.http import HttpResponse
+from django.template.loader import get_template
+from xhtml2pdf import pisa
 
 CustomUser = get_user_model()
 
@@ -147,6 +150,83 @@ def processar_formulario(request):
 
 def showPopulatedRegister (request, id):
     return 0
+
+def generateComplianceReportPdf(request):
+    proprietor = Proprietario.objects.latest('id_proprietario')
+    equipment = EquipamentoPublico.objects.latest('id_equipamento')
+    geom = Geometria.objects.latest('id_geom')
+    
+    proprietorCompliance = calculateProprietorCompliance(proprietor)
+    equipmentCompliance = calculateEquipmentCompliance(equipment)
+    geomCompliance = calculateGeomCompliance(geom)
+    
+    totalFields_proprietor = len(proprietorCompliance)
+    totalFields_equipment = len(equipmentCompliance)
+    totalFields_geom = len(geomCompliance)
+    
+    conformantFields_proprietor = sum(1 for c in proprietorCompliance.values() if c == 'Conforme')
+    conformantFields_equipment = sum(1 for c in equipmentCompliance.values() if c == 'Conforme')
+    conformantFields_geom = sum(1 for c in geomCompliance.values() if c == 'Conforme')
+    
+    adherencePercentage_proprietor = (conformantFields_proprietor / totalFields_proprietor) * 100 if totalFields_proprietor != 0 else 0
+    adherencePercentage_equipment = (conformantFields_equipment / totalFields_equipment) * 100 if totalFields_equipment != 0 else 0
+    adherencePercentage_geom = (conformantFields_geom / totalFields_geom) * 100 if totalFields_geom != 0 else 0
+    
+    totalTables = 3  
+    totalAdherencePercentage = (adherencePercentage_proprietor + adherencePercentage_equipment + adherencePercentage_geom) / totalTables
+    
+    templatePath = 'compliance_report.html'
+    context = {
+        'proprietor': proprietor,
+        'equipment': equipment,
+        'geom': geom,
+        'proprietorCompliance': proprietorCompliance,
+        'equipmentCompliance': equipmentCompliance,
+        'geomCompliance': geomCompliance,
+        'adherencePercentage_proprietor': adherencePercentage_proprietor,
+        'adherencePercentage_equipment': adherencePercentage_equipment,
+        'adherencePercentage_geom': adherencePercentage_geom,
+        'totalAdherencePercentage': totalAdherencePercentage,
+    }
+    template = get_template(templatePath)
+    html = template.render(context)
+    
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'filename="compliance_report.pdf"'
+    pisaStatus = pisa.CreatePDF(html, dest=response)
+    if pisaStatus.err:
+        return HttpResponse('An error occurred while generating the PDF.')
+    return response
+
+def calculateProprietorCompliance(proprietor):
+    compliance = {}
+    for field in Proprietario._meta.get_fields():
+        if field.name != 'id_proprietario' and field.name != 'id_modeloDinamico':
+            if getattr(proprietor, field.name):
+                compliance[field.name] = 'Conforme'
+            else:
+                compliance[field.name] = 'Não Conforme'
+    return compliance
+
+def calculateEquipmentCompliance(equipment):
+    compliance = {}
+    for field in EquipamentoPublico._meta.get_fields():
+        if field.name != 'id_equipamento' and field.name != 'id_modeloDinamico':
+            if getattr(equipment, field.name):
+                compliance[field.name] = 'Conforme'
+            else:
+                compliance[field.name] = 'Não Conforme'
+    return compliance
+
+def calculateGeomCompliance(geom):
+    compliance = {}
+    for field in Geometria._meta.get_fields():
+        if field.name != 'id_geom' and field.name != 'id_modeloDinamico':
+            if getattr(geom, field.name):
+                compliance[field.name] = 'Conforme'
+            else:
+                compliance[field.name] = 'Não Conforme'
+    return compliance
 
 def userHistory(request):
     return JsonResponse(list(ModeloDinamico.objects.values()), safe=False)

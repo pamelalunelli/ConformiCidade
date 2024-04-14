@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Conformidade</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+    {% load custom_filters %}
+</head>
+<body>
+    <h1>Relatório de Conformidade</h1>
+    
+    <h2>Tabela Proprietário</h2>
+    <table>
+        <tr>
+            <th>Modelo de Referência</th>
+            <th>Modelo de Entrada</th>
+            <th>Conformidade</th>
+        </tr>
+        {% with totalFields=proprietorCompliance|length %}
+        {% for field, conformity in proprietorCompliance.items %}
+        {% with field_value=proprietor|get_field:field %}
+        <tr>
+            <td>{{ field }}</td>
+            <td>{% if field_value %}{{ field_value }}{% else %}&nbsp;{% endif %}</td>
+            <td>{{ conformity }}</td>
+        </tr>
+        {% endwith %}
+        {% endfor %}
+        {% endwith %}
+    </table>
+    <p>Percentual de Aderência da Tabela Proprietário: {{ adherencePercentage_proprietor|floatformat:2 }}%</p>
+    
+    <h2>Tabela Equipamento</h2>
+    <table>
+        <tr>
+            <th>Modelo de Referência</th>
+            <th>Modelo de Entrada</th>
+            <th>Conformidade</th>
+        </tr>
+        {% with totalFields=equipmentCompliance|length %}
+        {% for field, conformity in equipmentCompliance.items %}
+        {% with field_value=equipment|get_field:field %}
+        <tr>
+            <td>{{ field }}</td>
+            <td>{% if field_value %}{{ field_value }}{% else %}&nbsp;{% endif %}</td>
+            <td>{{ conformity }}</td>
+        </tr>
+        {% endwith %}
+        {% endfor %}
+        {% endwith %}
+    </table>
+    <p>Percentual de Aderência da Tabela Equipamento: {{ adherencePercentage_equipment|floatformat:2 }}%</p>
+    
+    <h2>Tabela Geom</h2>
+    <table>
+        <tr>
+            <th>Modelo de Referência</th>
+            <th>Modelo de Entrada</th>
+            <th>Conformidade</th>
+        </tr>
+        {% with totalFields=geomCompliance|length %}
+        {% for field, conformity in geomCompliance.items %}
+        {% with field_value=geom|get_field:field %}
+        <tr>
+            <td>{{ field }}</td>
+            <td>{% if field_value %}{{ field_value }}{% else %}&nbsp;{% endif %}</td>
+            <td>{{ conformity }}</td>
+        </tr>
+        {% endwith %}
+        {% endfor %}
+        {% endwith %}
+    </table>    
+    <p>Percentual de Aderência da Tabela Geom: {{ adherencePercentage_geom|floatformat:2 }}%</p>
+    
+    <p>Aderência total dos dados de entrada aos dados do modelo: {{ totalAdherencePercentage|floatformat:2 }}%</p>
+</body>
+</html>

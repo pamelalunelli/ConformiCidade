@@ -1,0 +1,7 @@
+{
+    "terminal.integrated.environmentChangesIndicator": "on",
+    "python.createEnvironment.trigger": "prompt",
+    "python.terminal.activateEnvironment": false,
+    "python.envFile": "",
+    "python.globalModuleInstallation": false
+}

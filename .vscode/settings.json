@@ -1,0 +1,6 @@
+{
+    "python.autoComplete.extraPaths": [],
+    "python.terminal.activateEnvironment": false,
+    "python.globalModuleInstallation": true,
+    "python.analysis.extraPaths": []
+}
