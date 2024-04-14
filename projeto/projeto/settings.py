@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
 from pathlib import Path
+#from django.contrib.auth.models import User
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -143,3 +144,12 @@ SITE_ID = 1
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
+
+'''class FakeUserMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        request.user = User.objects.get(username='pamela')
+        return self.get_response(request)
+'''

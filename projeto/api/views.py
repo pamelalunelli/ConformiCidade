@@ -15,13 +15,14 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from .forms import CSVUploadForm
-from .models import ModeloDinamico, EquipamentoPublico, Geometria, Proprietario
+from .models import *
 from .serializers import CustomUserSerializer
 from .db_utils import createTable
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
+from django.apps import apps
 
 CustomUser = get_user_model()
 
@@ -86,7 +87,8 @@ def userData(request, id):
     return JsonResponse(fieldsName, safe=False)
 
 def defaultDataTable(request):
-    models = [EquipamentoPublico, Geometria, Proprietario]
+    #models = [EquipamentoPublico, Geometria, Proprietario]
+    models = apps.get_models()
 
     tables = []
 
@@ -109,7 +111,27 @@ def processar_formulario(request):
         try:
             data = json.loads(request.body)
 
-            equipamento_data = data.get('EquipamentoPublico', {})
+            for table_name, fields_data in data.items():
+                print("primeiro for")
+                # Iterar sobre os campos de entrada e campos de referência
+                for campo_entrada, campo_referencia in fields_data.items():
+                    print("segundo for")
+                    # Criar uma instância de CampoMatch com os dados encontrados
+                    CampoMatch.objects.create(
+                        usuario=request.user,  # Supondo que você tenha um usuário autenticado
+                        nome_campo_entrada=campo_entrada,
+                        nome_campo_referencia=campo_referencia,
+                        modelo_referencia=table_name
+                    )
+
+            # Retornar uma resposta de sucesso se tudo der certo
+            return HttpResponse("Dados processados com sucesso", status=200)
+
+        except Exception as e:
+            # Lidar com exceções, se ocorrerem
+            return HttpResponse("Ocorreu um erro ao processar os dados: " + str(e), status=500)
+        
+            """equipamento_data = data.get('EquipamentoPublico', {})
             geometria_data = data.get('Geometria', {})
             proprietario_data = data.get('Proprietario', {})
             
@@ -146,7 +168,7 @@ def processar_formulario(request):
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
     else:
-        return JsonResponse({'status': 'error', 'message': 'Método não permitido'})
+        return JsonResponse({'status': 'error', 'message': 'Método não permitido'})"""
 
 def showPopulatedRegister (request, id):
     return 0
