@@ -45,6 +45,9 @@ const HomePageContainer = ({
             const userDataId = response.data.id
             try {
               const userDataResponse = await axios.get(`/api/lista_objetos/${userDataId}/`)
+const matchingTableName = await axios.post(`/api/create_matching_table/`,  tableNameCSV, { headers: { 'Content-Type': 'application/json' } });
+                await axios.post(`/api/populate_matching_fields/`, { matchingTableName, fieldsCSV }, { headers: { 'Content-Type': 'application/json' } })
+                openModal()
               setUserData(userDataResponse.data)
               openModal()
               resetForm()
