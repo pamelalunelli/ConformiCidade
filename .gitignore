@@ -10290,3 +10290,7 @@ venv/Scripts/svg2pdf
 venv/Scripts/xhtml2pdf.exe
 venv/share/man/man1/qr.1
 venv/share/man/man1/svg2pdf.1
+projeto/api/__pycache__/forms.cpython-311.pyc
+projeto/api/__pycache__/models.cpython-311.pyc
+projeto/api/__pycache__/urls.cpython-311.pyc
+projeto/api/__pycache__/views.cpython-311.pyc
