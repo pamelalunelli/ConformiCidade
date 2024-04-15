@@ -3,6 +3,7 @@ import axios from 'axios'
 import { toast } from 'react-toastify'
 import { Formik } from 'formik'
 import * as Yup from 'yup'
+import { getCookie } from './cookieUtils'
 
 import { InputFile, Field } from '../library/inputs'
 import ValidationModal from './ValidationModal'
@@ -28,39 +29,49 @@ const HomePageContainer = ({
 
     const [modalIsOpen, setIsOpen] = useState(false)
     const [userData, setUserData ] = useState(null)
+    const [csrfToken, setCsrfToken] = useState('');
+
+    useEffect(() => {
+        const token = getCookie('csrftoken');
+        setCsrfToken(token);
+        console.log(token);
+    }, []);
 
     const openModal = () => setIsOpen(true)
 
     const closeModal = () => setIsOpen(false)
 
     const handleSubmit = async (values, { resetForm }) => {
-        const formData = new FormData()
-        formData.append('csv_arq', values.csv_arq)
-    
-        try {
+      const formData = new FormData()
+      formData.append('csv_arq', values.csv_arq)
+      formData.append('csrfmiddlewaretoken', csrfToken);
+      
+      try {
           const response = await axios.post('/api/upload/', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
           })
-          if (response.status === 200) {
-            const userDataId = response.data.id
+        if (response.status === 200) {
+            const userDataId = response.data.id;
+            const fieldsCSV = response.data.fields;
+            const tableNameCSV = response.data.tableName;
             try {
-              const userDataResponse = await axios.get(`/api/lista_objetos/${userDataId}/`)
-const matchingTableName = await axios.post(`/api/create_matching_table/`,  tableNameCSV, { headers: { 'Content-Type': 'application/json' } });
-                await axios.post(`/api/populate_matching_fields/`, { matchingTableName, fieldsCSV }, { headers: { 'Content-Type': 'application/json' } })
-                openModal()
-              setUserData(userDataResponse.data)
-              openModal()
-              resetForm()
+                //const userDataResponse = await axios.get(`/api/lista_objetos/${userDataId}/`)
+                const matchingTableName = await axios.post(`/api/create_matching_table/`,  tableNameCSV, { headers: { 'Content-Type': 'application/json' } });
+                const userDataResponse = await axios.post(`/api/populate_matching_fields/`, { matchingTableName, fieldsCSV }, { headers: { 'Content-Type': 'application/json' } });
+                console.log(userDataResponse.data)
+                setUserData(userDataResponse.data);
+                openModal();
+                resetForm();
             } catch (userDataError) {
               toast.error('Erro ao obter dados do usuário')
             }
-          } else {
+        } else {
             toast.error('Ocorreu um erro ao enviar seu arquivo')
-          }
-        } catch (error) {
-          toast.error('Ocorreu um erro ao enviar seu arquivo')
         }
-      }
+    } catch (error) {
+          toast.error('Ocorreu um erro ao enviar seu arquivo')
+    }      
+  }
 
     return (
          <>

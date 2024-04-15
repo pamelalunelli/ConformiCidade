@@ -21,7 +21,7 @@ const ValidationModal = ({
     const fetchObjetos = async () => {
         try {
             setIsFetching(true)
-              const response = await fetch('/api/campos_tabelas/')
+            const response = await fetch('/api/campos_tabelas/')
             const data = await response.json()
             setDefaultList(data)
         } catch (error) {
@@ -29,11 +29,20 @@ const ValidationModal = ({
         } finally {
             setIsFetching(false)
         }
-      }
+    }
 
     useEffect(() => {
-      fetchObjetos()
+        fetchObjetos()
     }, [])
+
+    const parseUserData = () => {
+        if (userData && userData.topReferencesJSON) {
+            const parsedData = JSON.parse(userData.topReferencesJSON)
+            const fieldNames = Object.values(parsedData).reduce((acc, arr) => acc.concat(arr), [])
+            return fieldNames
+        }
+        return []
+    }
 
     const initialValues = !!defaultList ? defaultList.reduce((acc, modelo) => {
         acc[modelo.name] = modelo.fields.reduce((fields, campo) => {
@@ -75,38 +84,38 @@ const ValidationModal = ({
                     {({setFieldValue}) => (
                         <Form id={'validation-form-id'}>
                             <Slider totalSlides={defaultList.length} {...{currentSlide, setCurrentSlide}}>
-                                {defaultList.map(dl => (
-                                    <StyledValidationModal.Container key={dl.name}>
-                                        <StyledValidationModal.List>
-                                            <StyledValidationModal.List.Title>
-                                                Modelo ISO
-                                            </StyledValidationModal.List.Title>
-                                            {dl.fields.map((field, i) =>
-                                                <li key={i}>
-                                                    <StyledValidationModal.List.FakeSelect>
-                                                        {field}
-                                                    </StyledValidationModal.List.FakeSelect>
-                                                </li>
-                                            )}
-                                        </StyledValidationModal.List>
-                                        <StyledValidationModal.List>
-                                            <StyledValidationModal.List.Title>
-                                                Seus dados
-                                            </StyledValidationModal.List.Title>
-                                            {dl.fields.map((field, i) =>
-                                                <li key={`userField-${i}`}>
-                                                    <Field component={StyledValidationModal.Select}
-                                                           name={`${dl.name}.${field}`}
-                                                           options={userData.map(data => ({value: data, label: data}))}
-                                                           placeholder='Selecione...'
-                                                           onChange={(e) => setFieldValue(`${dl.name}.${field}`, e.value)} />
-                                                </li>
-                                            )}
-                                        </StyledValidationModal.List>
-                                    </StyledValidationModal.Container>
-                                ))}
+                            {defaultList.map(dl => (
+                                <StyledValidationModal.Container key={dl.name}>
+                                    <StyledValidationModal.List>
+                                        <StyledValidationModal.List.Title>
+                                            Modelo ISO
+                                        </StyledValidationModal.List.Title>
+                                        {dl.fields.map((field, i) => (
+                                            <li key={i}>
+                                                <StyledValidationModal.List.FakeSelect>
+                                                    {field}
+                                                </StyledValidationModal.List.FakeSelect>
+                                            </li>
+                                        ))}
+                                    </StyledValidationModal.List>
+                                    <StyledValidationModal.List>
+                                        <StyledValidationModal.List.Title>
+                                            Seus dados
+                                        </StyledValidationModal.List.Title>
+                                        {dl.fields.map((field, i) => (
+                                            <li key={`${dl.name}-${i}`}>
+                                                <Field component={StyledValidationModal.Select}
+                                                    name={`${dl.name}.${field}`}
+                                                    options={parseUserData(dl.name).map(data => ({ value: data, label: data }))}
+                                                    placeholder='Selecione...'
+                                                    onChange={(e) => setFieldValue(`${dl.name}.${field}`, e.value)} />
+                                            </li>
+                                        ))}
+                                    </StyledValidationModal.List>
+                                </StyledValidationModal.Container>
+                            ))}
                             </Slider>
-                    </Form>
+                        </Form>
                     )}
                 </Formik>
             )}

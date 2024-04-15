@@ -1,8 +1,11 @@
 from django.urls import path
 from . import views
+from . import matching
 
 urlpatterns = [
     path('upload/', views.uploadFile, name='uploadFile'),
+    path('create_matching_table/', matching.createMatchingTable, name="createMatchingTable"),
+    path('populate_matching_fields/', matching.populateMatchingFields, name="populateMatchingFields"),
     path('lista_objetos/<int:id>/', views.userData, name='user_data'),
     path('campos_tabelas/', views.defaultDataTable, name='defaultDataTable'),
     path('processar_formulario/', views.processar_formulario, name='processar_formulario'),

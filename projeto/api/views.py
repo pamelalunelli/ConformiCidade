@@ -23,6 +23,7 @@ from django.http import HttpResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 from django.apps import apps
+#from .matching import populateInputFields, createMatchingTable
 
 CustomUser = get_user_model()
 
@@ -50,13 +51,15 @@ def uploadFile(request):
 
                 createTable(tabela_nome, campos_renomeados, dados_csv)
 
-                #dados_dinamicos = [{campo: line[campo] for campo in campos} for line in dados_csv]
-                #modelo_dinamico.data = json.dumps(dados_dinamicos)
                 modelo_dinamico.data = json.dumps(dados_csv)
                 modelo_dinamico.save()
 
-                response_data = {'id': id}
+                campos = [campo.strip('\ufeff') for campo in dados_csv[0].keys()]
+                response_data = {'id': id, 'fields': list(campos), 'tableName':tabela_nome}
+                print("response_data")
+                print(response_data)
                 print(f"CSV processado com sucesso! ID: {id}")
+                
                 return JsonResponse(response_data)
             except csv.Error as e:
                 print(f"Erro ao processar CSV: {e}")
@@ -71,6 +74,7 @@ def uploadFile(request):
         return JsonResponse({'error': 'Método não permitido'}, status=405)
 
 def userData(request, id):
+
     modelo_dinamico = get_object_or_404(ModeloDinamico, id=id)
 
     try:
@@ -102,7 +106,7 @@ def defaultDataTable(request):
         }
 
         tables.append(table)
-
+        
     return JsonResponse(tables, safe=False)
 
 @csrf_exempt
@@ -110,25 +114,27 @@ def processar_formulario(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
+            print(data)
 
-            for table_name, fields_data in data.items():
-                print("primeiro for")
-                # Iterar sobre os campos de entrada e campos de referência
-                for campo_entrada, campo_referencia in fields_data.items():
-                    print("segundo for")
-                    # Criar uma instância de CampoMatch com os dados encontrados
-                    CampoMatch.objects.create(
-                        usuario=request.user,  # Supondo que você tenha um usuário autenticado
-                        nome_campo_entrada=campo_entrada,
-                        nome_campo_referencia=campo_referencia,
-                        modelo_referencia=table_name
+            inputFieldTestList = []
+            for tableNameTest, fieldsData in data.items():
+                print("Tabela:", tableNameTest)
+                print("Campos", fieldsData)
+                for referenceFieldTest, inputFieldTest in fieldsData.items():
+                    FieldMatching.objects.create(
+                        #usuario=request.user,  # Supondo que você tenha um usuário autenticado
+                        inputField=inputFieldTest,
+                        referenceField=referenceFieldTest,
+                        tableName=tableNameTest
                     )
+                    inputFieldTestList.append(inputFieldTest)
+            
+            print("inputFieldTestList")
+            print(inputFieldTestList)
 
-            # Retornar uma resposta de sucesso se tudo der certo
             return HttpResponse("Dados processados com sucesso", status=200)
 
         except Exception as e:
-            # Lidar com exceções, se ocorrerem
             return HttpResponse("Ocorreu um erro ao processar os dados: " + str(e), status=500)
         
             """equipamento_data = data.get('EquipamentoPublico', {})

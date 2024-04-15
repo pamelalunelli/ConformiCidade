@@ -3,15 +3,15 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.utils.translation import gettext_lazy as _
 
-class CampoMatch(models.Model):
-    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE) 
-    nome_campo_entrada = models.CharField(max_length=255) 
-    nome_campo_referencia = models.CharField(max_length=255)
-    modelo_referencia = models.CharField(max_length=255)
-    data_matching = models.DateTimeField(auto_now_add=True)
+class FieldMatching(models.Model):
+    #usuer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE) 
+    inputField = models.CharField(max_length=255) 
+    referenceField = models.CharField(max_length=255)
+    tableName = models.CharField(max_length=255)
+    timestamp = models.DateTimeField(auto_now_add=True)
     
-    class Meta:
-        unique_together = ['usuario', 'nome_campo_entrada']
+    #class Meta:
+    #    unique_together = ['usuario', 'nome_campo_entrada']
         
 class BR_CaracteristicasEdificacao(models.Model):
     status = models.IntegerField(null=True)

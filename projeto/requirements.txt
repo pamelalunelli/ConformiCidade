@@ -13,3 +13,5 @@ whitenoise
 gunicorn
 xhtml2pdf
 textdistance
+pandas
+numpy
