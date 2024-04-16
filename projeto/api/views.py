@@ -17,12 +17,13 @@ from django.contrib.auth import authenticate
 from .forms import CSVUploadForm
 from .models import *
 from .serializers import CustomUserSerializer
-from .db_utils import createTable
+#from .db_utils import createTable
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 from django.apps import apps
+from django.db import connection
 #from .matching import populateInputFields, createMatchingTable
 
 CustomUser = get_user_model()
@@ -49,17 +50,17 @@ def uploadFile(request):
                 modelo_dinamico = ModeloDinamico.objects.create(nome=nome_arquivo)
                 id = modelo_dinamico.id
 
-                createTable(tabela_nome, campos_renomeados, dados_csv)
+                createTable(tabela_nome, campos_renomeados, dados_csv, id)
 
                 modelo_dinamico.data = json.dumps(dados_csv)
                 modelo_dinamico.save()
 
                 campos = [campo.strip('\ufeff') for campo in dados_csv[0].keys()]
-                response_data = {'id': id, 'fields': list(campos), 'tableName':tabela_nome}
+                response_data = {'id': id, 'fields': list(campos), 'tableName': tabela_nome}
                 print("response_data")
                 print(response_data)
                 print(f"CSV processado com sucesso! ID: {id}")
-                
+
                 return JsonResponse(response_data)
             except csv.Error as e:
                 print(f"Erro ao processar CSV: {e}")
@@ -72,6 +73,30 @@ def uploadFile(request):
             return JsonResponse({'error': 'Formulário inválido'}, status=400)
     else:
         return JsonResponse({'error': 'Método não permitido'}, status=405)
+
+def createTable(tabela_nome, campos_renomeados, dados_csv, iduserdata):
+    with connection.cursor() as cursor:
+        cursor.execute(f"DROP TABLE IF EXISTS {tabela_nome}")
+
+        sql_cria_tabela = f"""
+        CREATE TABLE {tabela_nome} (
+            id serial PRIMARY KEY,
+            iduserdata integer,
+            {', '.join([campo + ' VARCHAR(255)' for campo in campos_renomeados])}
+        )
+        """
+        print("SQL Criar Tabela:", sql_cria_tabela)
+        cursor.execute(sql_cria_tabela)
+
+        sql_insere_tabela = f"""
+        INSERT INTO {tabela_nome} (iduserdata, {', '.join(campos_renomeados)})
+        VALUES (%s, {', '.join(['%s' for _ in campos_renomeados])})
+        """
+
+        values = [[iduserdata] + [linha.get(campo, None) for campo in campos_renomeados] for linha in dados_csv]
+
+        print("Valores a serem inseridos:", values)
+        cursor.executemany(sql_insere_tabela, values)
 
 def userData(request, id):
 
@@ -114,6 +139,7 @@ def processar_formulario(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
+            iduserdata = data.pop('UserDataId', None)  # Remover UserDataId do corpo e atribuir a iduserdata
             print(data)
 
             inputFieldTestList = []
@@ -122,10 +148,10 @@ def processar_formulario(request):
                 print("Campos", fieldsData)
                 for referenceFieldTest, inputFieldTest in fieldsData.items():
                     FieldMatching.objects.create(
-                        #usuario=request.user,  # Supondo que você tenha um usuário autenticado
                         inputField=inputFieldTest,
                         referenceField=referenceFieldTest,
-                        tableName=tableNameTest
+                        tableName=tableNameTest,
+                        iduserdata=iduserdata  # Inserir iduserdata
                     )
                     inputFieldTestList.append(inputFieldTest)
             

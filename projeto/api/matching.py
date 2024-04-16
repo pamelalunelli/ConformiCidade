@@ -23,6 +23,7 @@ def createMatchingTable(request):
                 createTableQuery = f"""
                 CREATE TABLE {tableName} (
                     id serial PRIMARY KEY,
+                    iduserdata integer,
                     inputField VARCHAR(255),
                     referenceField VARCHAR(255),
                     tableName VARCHAR(255),
@@ -77,6 +78,7 @@ def populateMatchingFields(request):
             request_data = json.loads(request.body)
             matchingTableName = request_data.get('matchingTableName', {}).get('data', '')
             fieldsCSV = request_data.get('fieldsCSV', [])
+            userDataId = request_data.get('userDataId', None)  # Adicione esta linha para recuperar userDataId
 
             referenceFields = getReferenceFields()
 
@@ -85,9 +87,9 @@ def populateMatchingFields(request):
                     for referenceField in referenceFields:
                         try:
                             cursor.execute(f"""
-                                INSERT INTO {matchingTableName} (inputField, referenceField, tableName)
-                                VALUES (%s, %s, %s)
-                            """, [inputField, referenceField, matchingTableName])
+                                INSERT INTO {matchingTableName} (iduserdata, inputField, referenceField, tableName)
+                                VALUES (%s, %s, %s, %s)
+                            """, [userDataId, inputField, referenceField, matchingTableName])
                         except Exception as e:
                             return JsonResponse({'error': str(e)}, status=500)
             

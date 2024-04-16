@@ -5,7 +5,8 @@ from django.utils.translation import gettext_lazy as _
 
 class FieldMatching(models.Model):
     #usuer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE) 
-    inputField = models.CharField(max_length=255) 
+    iduserdata = models.IntegerField()
+    inputField = models.CharField(max_length=255)
     referenceField = models.CharField(max_length=255)
     tableName = models.CharField(max_length=255)
     timestamp = models.DateTimeField(auto_now_add=True)
