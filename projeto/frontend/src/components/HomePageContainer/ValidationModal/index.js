@@ -8,7 +8,8 @@ import { StyledValidationModal } from './styles';
 const ValidationModal = ({
     modalIsOpen,
     closeModal,
-    userData
+    userData,
+    userDataId 
 }) => {
     const [defaultList, setDefaultList] = useState([]);
     const [isFetching, setIsFetching] = useState(true);
@@ -54,7 +55,7 @@ const ValidationModal = ({
         try {
             const response = await fetch('/api/processar_formulario/', {
                 method: 'POST',
-                body: JSON.stringify(values),
+                body: JSON.stringify({ ...values, userDataId }),
             });
             if (response.ok) {
                 toast.success('Dados enviados com sucesso!');

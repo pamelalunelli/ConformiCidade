@@ -1,75 +1,75 @@
-import React, { useState, useEffect } from 'react'
-import axios from 'axios'
-import { toast } from 'react-toastify'
-import { Formik } from 'formik'
-import * as Yup from 'yup'
-import { getCookie } from './cookieUtils'
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import { Formik } from 'formik';
+import * as Yup from 'yup';
+import { getCookie } from './cookieUtils';
 
-import { InputFile, Field } from '../library/inputs'
-import ValidationModal from './ValidationModal'
+import { InputFile, Field } from '../library/inputs';
+import ValidationModal from './ValidationModal';
 
-import { StyledHomePageContainer } from './styles'
+import { StyledHomePageContainer } from './styles';
 
 const fileSchema = (required) => {
   return Yup.mixed().test('csv_arq', 'É necessário fornecer um arquivo', (value) => {
     if (!required) {
-        return true
+        return true;
     }
-      return !!value
-    })
-  }
+      return !!value;
+    });
+  };
 
 const schema = Yup.object().shape({
   fileName: Yup.string(),
   csv_arq: fileSchema(true)
-})
+});
 
-const HomePageContainer = ({
-}) => {
+const HomePageContainer = () => {
 
-  const [modalIsOpen, setIsOpen] = useState(false)
-  const [userData, setUserData ] = useState(null)
+  const [modalIsOpen, setIsOpen] = useState(false);
+  const [userData, setUserData ] = useState(null);
   const [csrfToken, setCsrfToken] = useState('');
+  const [userDataId, setUserDataId] = useState('');
 
   useEffect(() => {
     const token = getCookie('csrftoken');
     setCsrfToken(token);
   }, []);
 
-  const openModal = () => setIsOpen(true)
+  const openModal = () => setIsOpen(true);
 
-  const closeModal = () => setIsOpen(false)
+  const closeModal = () => setIsOpen(false);
 
   const handleSubmit = async (values, { resetForm }) => {
-    const formData = new FormData()
-    formData.append('csv_arq', values.csv_arq)
+    const formData = new FormData();
+    formData.append('csv_arq', values.csv_arq);
     formData.append('csrfmiddlewaretoken', csrfToken);
     
     try {
       const response = await axios.post('/api/upload/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
-      })
+      });
       if (response.status === 200) {
         const userDataId = response.data.id;
+        setUserDataId(userDataId); // Set userDataId here
         const fieldsCSV = response.data.fields;
         const tableNameCSV = response.data.tableName;
         try {
-          //const userDataResponse = await axios.get(`/api/lista_objetos/${userDataId}/`)
           const matchingTableName = await axios.post(`/api/create_matching_table/`,  tableNameCSV, { headers: { 'Content-Type': 'application/json' } });
           const userDataResponse = await axios.post(`/api/populate_matching_fields/`, { matchingTableName, fieldsCSV, userDataId}, { headers: { 'Content-Type': 'application/json' } });
           setUserData(userDataResponse.data);
           openModal();
           resetForm();
         } catch (userDataError) {
-          toast.error('Erro ao obter dados do usuário')
+          toast.error('Erro ao obter dados do usuário');
         }
       } else {
-        toast.error('Ocorreu um erro ao enviar seu arquivo')
+        toast.error('Ocorreu um erro ao enviar seu arquivo');
       }
     } catch (error) {
-      toast.error('Ocorreu um erro ao enviar seu arquivo')
+      toast.error('Ocorreu um erro ao enviar seu arquivo');
     }      
-  }
+  };
 
   return (
     <>
@@ -89,7 +89,7 @@ const HomePageContainer = ({
           </StyledHomePageContainer.Paragraph>
         </div>
         <div>
-          <img src=''/>
+          <img src='' alt="Reference Image"/>
         </div>
       </StyledHomePageContainer.Reference>
       <Formik initialValues={{fileName: '', csv_arq: null}}
@@ -116,9 +116,9 @@ const HomePageContainer = ({
           </StyledHomePageContainer.Form>
         )}
       </Formik>
-            <ValidationModal {...{modalIsOpen, closeModal, userData}}/>
+      <ValidationModal modalIsOpen={modalIsOpen} closeModal={closeModal} userData={userData} userDataId={userDataId} /> {/* Pass userDataId to ValidationModal */}
     </>
   )
 }
 
-export default HomePageContainer
+export default HomePageContainer;

@@ -17,14 +17,14 @@ from django.contrib.auth import authenticate
 from .forms import CSVUploadForm
 from .models import *
 from .serializers import CustomUserSerializer
-#from .db_utils import createTable
-from django.shortcuts import render
 from django.http import HttpResponse
-from django.template.loader import get_template
-from xhtml2pdf import pisa
 from django.apps import apps
 from django.db import connection
-#from .matching import populateInputFields, createMatchingTable
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from .models import FieldMatching
+from django.template.loader import render_to_string
 
 CustomUser = get_user_model()
 
@@ -116,7 +116,7 @@ def userData(request, id):
     return JsonResponse(fieldsName, safe=False)
 
 def defaultDataTable(request):
-    #models = [EquipamentoPublico, Geometria, Proprietario]
+
     models = apps.get_models()
 
     tables = []
@@ -139,148 +139,64 @@ def processar_formulario(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            iduserdata = data.pop('UserDataId', None)  # Remover UserDataId do corpo e atribuir a iduserdata
-            print(data)
+            iduserdata = data.pop('userDataId', None)  
 
             inputFieldTestList = []
             for tableNameTest, fieldsData in data.items():
-                print("Tabela:", tableNameTest)
-                print("Campos", fieldsData)
                 for referenceFieldTest, inputFieldTest in fieldsData.items():
                     FieldMatching.objects.create(
                         inputField=inputFieldTest,
                         referenceField=referenceFieldTest,
                         tableName=tableNameTest,
-                        iduserdata=iduserdata  # Inserir iduserdata
+                        iduserdata=iduserdata
                     )
                     inputFieldTestList.append(inputFieldTest)
             
-            print("inputFieldTestList")
-            print(inputFieldTestList)
+            response = generateReport(iduserdata)
 
-            return HttpResponse("Dados processados com sucesso", status=200)
+            return HttpResponse(render_to_string('open_pdf_window.html', {'pdf_url': response.content}), status=200)
 
         except Exception as e:
             return HttpResponse("Ocorreu um erro ao processar os dados: " + str(e), status=500)
-        
-            """equipamento_data = data.get('EquipamentoPublico', {})
-            geometria_data = data.get('Geometria', {})
-            proprietario_data = data.get('Proprietario', {})
-            
-            print("TESTE1")
-            print("este é o equipamento_data", equipamento_data)
-            print("este é o geometria_data", geometria_data)
-            print("este é o proprietario_data", proprietario_data)
 
-            equipamento_data.pop('id_equipamento', None)
-            #equipamento_data['id_modeloDinamico'] = id
-            equipamento_data.pop('id_modeloDinamico', None)
-            equipamentoPublico = EquipamentoPublico(**equipamento_data)
-            geometria_data.pop('id_geom', None)
-            #geometria_data['id_modeloDinamico'] = id
-            geometria_data.pop('id_modeloDinamico', None)
-            geometria = Geometria(**geometria_data)
-            proprietario_data.pop('id_proprietario', None)
-            #proprietario_data['id_modeloDinamico'] = id
-            proprietario_data.pop('id_modeloDinamico', None)
-            proprietario = Proprietario(**proprietario_data)
-
-            print("TESTE2")
-            print("este é o equipamentoPublico", equipamentoPublico)
-            print("este é o geometria", geometria)
-            print("este é o proprietario", proprietario)
-
-            equipamentoPublico.save()
-            geometria.save()
-            proprietario.save()
-
-            print("TESTE3")
-            
-            return JsonResponse({'status': 'success'})
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)})
-    else:
-        return JsonResponse({'status': 'error', 'message': 'Método não permitido'})"""
-
-def showPopulatedRegister (request, id):
-    return 0
-
-def generateComplianceReportPdf(request):
-    proprietor = Proprietario.objects.latest('id_proprietario')
-    equipment = EquipamentoPublico.objects.latest('id_equipamento')
-    geom = Geometria.objects.latest('id_geom')
-    
-    proprietorCompliance = calculateProprietorCompliance(proprietor)
-    equipmentCompliance = calculateEquipmentCompliance(equipment)
-    geomCompliance = calculateGeomCompliance(geom)
-    
-    totalFields_proprietor = len(proprietorCompliance)
-    totalFields_equipment = len(equipmentCompliance)
-    totalFields_geom = len(geomCompliance)
-    
-    conformantFields_proprietor = sum(1 for c in proprietorCompliance.values() if c == 'Conforme')
-    conformantFields_equipment = sum(1 for c in equipmentCompliance.values() if c == 'Conforme')
-    conformantFields_geom = sum(1 for c in geomCompliance.values() if c == 'Conforme')
-    
-    adherencePercentage_proprietor = (conformantFields_proprietor / totalFields_proprietor) * 100 if totalFields_proprietor != 0 else 0
-    adherencePercentage_equipment = (conformantFields_equipment / totalFields_equipment) * 100 if totalFields_equipment != 0 else 0
-    adherencePercentage_geom = (conformantFields_geom / totalFields_geom) * 100 if totalFields_geom != 0 else 0
-    
-    totalTables = 3  
-    totalAdherencePercentage = (adherencePercentage_proprietor + adherencePercentage_equipment + adherencePercentage_geom) / totalTables
-    
-    templatePath = 'compliance_report.html'
-    context = {
-        'proprietor': proprietor,
-        'equipment': equipment,
-        'geom': geom,
-        'proprietorCompliance': proprietorCompliance,
-        'equipmentCompliance': equipmentCompliance,
-        'geomCompliance': geomCompliance,
-        'adherencePercentage_proprietor': adherencePercentage_proprietor,
-        'adherencePercentage_equipment': adherencePercentage_equipment,
-        'adherencePercentage_geom': adherencePercentage_geom,
-        'totalAdherencePercentage': totalAdherencePercentage,
-    }
-    template = get_template(templatePath)
-    html = template.render(context)
-    
+def generateReport(iduserdata):
     response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'filename="compliance_report.pdf"'
-    pisaStatus = pisa.CreatePDF(html, dest=response)
-    if pisaStatus.err:
-        return HttpResponse('An error occurred while generating the PDF.')
+    response['Content-Disposition'] = 'attachment; filename="report.pdf"'
+
+    fieldMatchings = FieldMatching.objects.filter(iduserdata=iduserdata)
+
+    doc = SimpleDocTemplate(response, pagesize=letter)
+    data = []
+
+    data.append(['Campo de Referência', 'Campo de Entrada', 'Conformidade'])
+
+    for fieldMatching in fieldMatchings:
+        referenceField = fieldMatching.referenceField
+        inputField = fieldMatching.inputField
+
+        # Verifica se ambos os campos estão preenchidos
+        if referenceField and inputField:
+            conformidade = 'Conforme'
+        else:
+            conformidade = 'Não Conforme'
+
+        data.append([referenceField, inputField, conformidade])
+
+    table = Table(data)
+
+    style = TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                        ('GRID', (0, 0), (-1, -1), 1, colors.black)])
+
+    table.setStyle(style)
+
+    doc.build([table])
+
     return response
-
-def calculateProprietorCompliance(proprietor):
-    compliance = {}
-    for field in Proprietario._meta.get_fields():
-        if field.name != 'id_proprietario' and field.name != 'id_modeloDinamico':
-            if getattr(proprietor, field.name):
-                compliance[field.name] = 'Conforme'
-            else:
-                compliance[field.name] = 'Não Conforme'
-    return compliance
-
-def calculateEquipmentCompliance(equipment):
-    compliance = {}
-    for field in EquipamentoPublico._meta.get_fields():
-        if field.name != 'id_equipamento' and field.name != 'id_modeloDinamico':
-            if getattr(equipment, field.name):
-                compliance[field.name] = 'Conforme'
-            else:
-                compliance[field.name] = 'Não Conforme'
-    return compliance
-
-def calculateGeomCompliance(geom):
-    compliance = {}
-    for field in Geometria._meta.get_fields():
-        if field.name != 'id_geom' and field.name != 'id_modeloDinamico':
-            if getattr(geom, field.name):
-                compliance[field.name] = 'Conforme'
-            else:
-                compliance[field.name] = 'Não Conforme'
-    return compliance
 
 def userHistory(request):
     return JsonResponse(list(ModeloDinamico.objects.values()), safe=False)
