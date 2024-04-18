@@ -37,6 +37,7 @@ StyledValidationModal.List.Title = styled.h3(({theme}) =>`
     color: #3D3D3D;
     ${theme.typography.body.strong}
     margin: 0 ${theme.spacing.md} 0 0;
+    font-size: ${theme.typography.genericFontSize};
 `)
 
 StyledValidationModal.Select = styled(Select).attrs({classNamePrefix: 'fieldsSelect'})(({theme}) =>`
@@ -81,3 +82,16 @@ StyledValidationModal.Select = styled(Select).attrs({classNamePrefix: 'fieldsSel
         }
     }
 `)
+
+StyledValidationModal.List.Subtitle = styled.h4(({ theme }) =>`
+    color: #3D3D3D;
+    ${theme.typography.body.base}
+    margin: ${theme.spacing.sm} 0;
+    font-size: 1rem;
+`)
+
+export const InfoIcon = styled.span`
+    cursor: pointer;
+    margin-left: 5px;
+    // Adicione mais estilos conforme necessário
+`;

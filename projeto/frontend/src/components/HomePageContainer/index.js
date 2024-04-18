@@ -74,18 +74,18 @@ const HomePageContainer = () => {
   return (
     <>
       <div>
-        <StyledHomePageContainer.Title>Lorem Ipsum</StyledHomePageContainer.Title>
+        <StyledHomePageContainer.Title>Validador de Dados Cadastrais</StyledHomePageContainer.Title>
         <StyledHomePageContainer.Paragraph>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque hendrerit augue vitae metus hendrerit, et vulputate elit tempor. Vivamus dolor felis, auctor et maximus vitae, venenatis eget risus. Nulla eget lorem pellentesque, pellentesque lorem ut, pharetra augue. Quisque volutpat malesuada nibh nec lobortis. Cras luctus eleifend dolor eget venenatis. Quisque et bibendum eros. Duis non convallis neque. Nunc luctus consectetur varius. Mauris orci felis, dictum id dolor eu, rutrum bibendum sapien. Sed auctor sodales imperdiet. Nulla placerat dictum urna, eu ullamcorper ligula malesuada et. Fusce gravida est nec euismod vestibulum. Etiam commodo sapien eu est dictum, eu cursus libero vulputate.
+          Este validador tem como objetivo auxiliar o mapeamento das entidades presentes nos Cadastros Imobiliários Fiscais dos municípios tendo como base um modelo concebido a partir do segmento fiscal do modelo proposto por Santos (2022), tese de doutorado que teve como objeto de estudo os Direitos, Restrições e Responsabilidades (RRR) sob o aspecto técnico da ISO 19.152:2012 (Land Administration Domain Model).
         </StyledHomePageContainer.Paragraph>
       </div>
       <StyledHomePageContainer.Reference>
         <div>
           <StyledHomePageContainer.Reference.Title>
-            Tabela referência
+            Arquivo de Entrada
           </StyledHomePageContainer.Reference.Title>
           <StyledHomePageContainer.Paragraph>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque hendrerit augue vitae metus hendrerit, et vulputate elit tempor. Vivamus dolor felis, auctor et maximus vitae, venenatis eget risus.
+            O arquivo a ser carregado deve ser um comma-separated value (*.csv) e deve conter, obrigatoriamente, em sua primeira linha, os nomes dos campos a serem mapeados no processo. O arquivo pode ou não conter dados.
           </StyledHomePageContainer.Paragraph>
         </div>
         <div>

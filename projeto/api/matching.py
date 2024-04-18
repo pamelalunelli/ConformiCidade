@@ -107,10 +107,10 @@ def populateMatchingFields(request):
         return JsonResponse({'error': 'Method Not Allowed'}, status=405)
     
 def getReferenceFields():
-    models = apps.get_models()
     referenceFields = []
 
-    for model in models:
+    app_models = apps.get_app_config('api').get_models()
+    for model in app_models:
         fields = [field.name for field in model._meta.get_fields() if field.concrete]
         referenceFields.extend(fields)
 

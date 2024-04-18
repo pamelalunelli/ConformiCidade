@@ -1,5 +1,6 @@
 import csv
 import json
+from typing import TextIO
 import time
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -22,11 +23,20 @@ from django.apps import apps
 from django.db import connection
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from .models import FieldMatching
+from io import BytesIO
+import base64
 from django.template.loader import render_to_string
+from collections import defaultdict
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from fpdf import FPDF
 
 CustomUser = get_user_model()
+
+'''def detectDelimiter(csvFile: TextIO) -> str:
+    dialect = csv.Sniffer().sniff(csvFile.read(1024))
+    return dialect.delimiter'''
 
 @transaction.atomic
 @csrf_exempt
@@ -37,34 +47,30 @@ def uploadFile(request):
             try:
                 arquivo_csv = form.cleaned_data['csv_arq']
                 nome_arquivo = arquivo_csv.name
-                arquivo_formatado = arquivo_csv.read().decode('utf-8').splitlines()
-                dicionario_csv = csv.DictReader(arquivo_formatado)
 
-                dados_csv = list(dicionario_csv)
-                arquivo_csv.seek(0)
+                arquivo_formatado = arquivo_csv.read().decode('utf-8').splitlines()
+                
+                cabecalho = arquivo_formatado[0]
+                campos = cabecalho.split(',')
+
+                dados_csv = []
 
                 tabela_nome = f"input_{int(time.time())}"
-                campos_renomeados = [campo.replace(" ", "_") for campo in dicionario_csv.fieldnames]
-                campos = dados_csv[0].keys()
 
                 modelo_dinamico = ModeloDinamico.objects.create(nome=nome_arquivo)
                 id = modelo_dinamico.id
 
-                createTable(tabela_nome, campos_renomeados, dados_csv, id)
+                createTable(tabela_nome, campos, dados_csv, id)
 
                 modelo_dinamico.data = json.dumps(dados_csv)
                 modelo_dinamico.save()
 
-                campos = [campo.strip('\ufeff') for campo in dados_csv[0].keys()]
-                response_data = {'id': id, 'fields': list(campos), 'tableName': tabela_nome}
+                response_data = {'id': id, 'fields': campos, 'tableName': tabela_nome}
                 print("response_data")
                 print(response_data)
                 print(f"CSV processado com sucesso! ID: {id}")
 
                 return JsonResponse(response_data)
-            except csv.Error as e:
-                print(f"Erro ao processar CSV: {e}")
-                return JsonResponse({'error': 'Erro ao processar o arquivo CSV'}, status=400)
             except Exception as e:
                 print(f"Erro ao processar: {e}")
                 return JsonResponse({'error': 'Erro interno ao processar a solicitação'}, status=500)
@@ -117,25 +123,27 @@ def userData(request, id):
 
 def defaultDataTable(request):
 
-    models = apps.get_models()
+    excludedTables = ['FieldMatching', 'ModeloDinamico', 'CustomUser', 'AdminUser']
 
+    models = apps.get_app_config('api').get_models()
+    
     tables = []
 
     for model in models:
-        modelName = model._meta.object_name
-        fields = [field.name for field in model._meta.get_fields() if field.concrete]
+        if model._meta.app_label == 'api' and not model._meta.abstract and model._meta.object_name not in excludedTables:
+            modelName = model._meta.object_name
+            fields = [field.name for field in model._meta.get_fields() if field.concrete]
 
-        table = {
-            'name': modelName,
-            'fields': fields,
-        }
+            table = {
+                'name': modelName,
+                'fields': fields,
+            }
+            tables.append(table)
 
-        tables.append(table)
-        
     return JsonResponse(tables, safe=False)
 
 @csrf_exempt
-def processar_formulario(request):
+def processForm (request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -154,10 +162,19 @@ def processar_formulario(request):
             
             response = generateReport(iduserdata)
 
-            return HttpResponse(render_to_string('open_pdf_window.html', {'pdf_url': response.content}), status=200)
+            pdf_content_base64 = base64.b64encode(response.content).decode('utf-8')
+
+            return HttpResponse(render_to_string('open_pdf_window.html', {'pdf_content_base64': pdf_content_base64}), status=200)
 
         except Exception as e:
             return HttpResponse("Ocorreu um erro ao processar os dados: " + str(e), status=500)
+
+from .models import FieldMatching
+from django.http import HttpResponse
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle
+from reportlab.lib import colors
 
 def generateReport(iduserdata):
     response = HttpResponse(content_type='application/pdf')
@@ -165,36 +182,83 @@ def generateReport(iduserdata):
 
     fieldMatchings = FieldMatching.objects.filter(iduserdata=iduserdata)
 
-    doc = SimpleDocTemplate(response, pagesize=letter)
-    data = []
-
-    data.append(['Campo de Referência', 'Campo de Entrada', 'Conformidade'])
+    tableData = {}
+    tableConformity = {}
 
     for fieldMatching in fieldMatchings:
-        referenceField = fieldMatching.referenceField
-        inputField = fieldMatching.inputField
+        if fieldMatching.tableName not in tableData:
+            tableData[fieldMatching.tableName] = []
+            tableConformity[fieldMatching.tableName] = {'conform': 0, 'nonconform': 0}
 
-        # Verifica se ambos os campos estão preenchidos
-        if referenceField and inputField:
-            conformidade = 'Conforme'
+        tableData[fieldMatching.tableName].append(fieldMatching)
+        if fieldMatching.referenceField and fieldMatching.inputField:
+            tableConformity[fieldMatching.tableName]['conform'] += 1
         else:
-            conformidade = 'Não Conforme'
+            tableConformity[fieldMatching.tableName]['nonconform'] += 1
 
-        data.append([referenceField, inputField, conformidade])
+    buffer = response
 
-    table = Table(data)
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    elements = []
 
-    style = TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                        ('GRID', (0, 0), (-1, -1), 1, colors.black)])
+    # Definindo estilos para os títulos
+    titleStyleMain = ParagraphStyle(name='TitleStyleMain', fontSize=20, textColor=colors.black, alignment=1)
+    titleStyleSecondary = ParagraphStyle(name='TitleStyleSecondary', fontSize=12, textColor=colors.black, alignment=1)
 
-    table.setStyle(style)
+    # Adicionando títulos
+    title_main_text = "Relatório de Conformidade"
+    title_main = Paragraph(title_main_text, titleStyleMain)
+    elements.append(title_main)
 
-    doc.build([table])
+    title_secondary_text = "Comparação entre campos de referência (modelo fiscal baseado no LADM) e campos do arquivo de entrada"
+    title_secondary = Paragraph(title_secondary_text, titleStyleSecondary)
+    elements.append(title_secondary)
+
+    for tableName, matches in tableData.items():
+        # Título da tabela
+        title_table_text = f'<b>{tableName}</b>'
+        title_table = Paragraph(title_table_text, titleStyleSecondary)
+        elements.append(title_table)
+
+        # Dados da tabela
+        data = [['Campo de Referência', 'Campo de Entrada', 'Conformidade']]
+        for match in matches:
+            referenceField = match.referenceField
+            inputField = match.inputField
+            conformity = 'Conforme' if referenceField and inputField else 'Não Conforme'
+            data.append([referenceField, inputField, conformity])
+
+        table = Table(data, colWidths=[180, 180, 90], hAlign='LEFT')
+        table.setStyle(TableStyle([('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                                   ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                                   ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                                   ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                                   ('LINEABOVE', (0, 0), (-1, 0), 1, colors.black),
+                                   ('LINEBELOW', (0, 0), (-1, 0), 2, colors.black),
+                                   ('LINEABOVE', (0, 1), (-1, -1), 1, colors.black),
+                                   ('GRID', (0, 0), (-1, -1), 1, colors.black)]))
+        elements.append(table)
+
+        # Calculando percentual de conformidade
+        totalFields = len(matches)
+        totalConformFields = tableConformity[tableName]['conform']
+        conformityPercentage = (totalConformFields / totalFields) * 100
+        conformityPercentage = round(conformityPercentage, 2)
+
+        elements.append(Paragraph(f'Percentual de conformidade: {conformityPercentage}%', titleStyleSecondary))
+
+    # Calculando percentual geral de conformidade
+    overallConformityPercentage = (sum(tc['conform'] for tc in tableConformity.values()) / sum(len(td) for td in tableData.values())) * 100
+    overallConformityPercentage = round(overallConformityPercentage, 2)
+    elements.append(Paragraph(f'Percentual geral de conformidade: {overallConformityPercentage}%', titleStyleSecondary))
+
+    # Construindo o documento
+    doc.build(elements)
+
+    pdfContent = buffer.getvalue()
+    buffer.close()
+
+    response.write(pdfContent)
 
     return response
 
