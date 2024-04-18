@@ -169,12 +169,10 @@ def processForm (request):
         except Exception as e:
             return HttpResponse("Ocorreu um erro ao processar os dados: " + str(e), status=500)
 
-from .models import FieldMatching
-from django.http import HttpResponse
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.styles import ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle
 from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
 def generateReport(iduserdata):
     response = HttpResponse(content_type='application/pdf')
@@ -200,27 +198,21 @@ def generateReport(iduserdata):
 
     doc = SimpleDocTemplate(buffer, pagesize=letter)
     elements = []
-
-    # Definindo estilos para os títulos
-    titleStyleMain = ParagraphStyle(name='TitleStyleMain', fontSize=20, textColor=colors.black, alignment=1)
-    titleStyleSecondary = ParagraphStyle(name='TitleStyleSecondary', fontSize=12, textColor=colors.black, alignment=1)
+    
+    # Definindo estilos
+    sampleStyles = getSampleStyleSheet()
+    boldStyle = ParagraphStyle(name='Bold', parent=sampleStyles["Normal"])
+    boldStyle.fontName = 'Helvetica-Bold'
+    sampleStyles.add(boldStyle)
 
     # Adicionando títulos
-    title_main_text = "Relatório de Conformidade"
-    title_main = Paragraph(title_main_text, titleStyleMain)
-    elements.append(title_main)
-
-    title_secondary_text = "Comparação entre campos de referência (modelo fiscal baseado no LADM) e campos do arquivo de entrada"
-    title_secondary = Paragraph(title_secondary_text, titleStyleSecondary)
-    elements.append(title_secondary)
+    elements.append(Paragraph("Relatório de Conformidade", sampleStyles["Title"]))
+    elements.append(Paragraph("Comparação entre Modelo de", sampleStyles["Heading3"]))
+    elements.append(Paragraph("Referência e Arquivo de entrada", sampleStyles["Heading3"]))
 
     for tableName, matches in tableData.items():
-        # Título da tabela
-        title_table_text = f'<b>{tableName}</b>'
-        title_table = Paragraph(title_table_text, titleStyleSecondary)
-        elements.append(title_table)
+        elements.append(Paragraph(f'<b>{tableName}</b>', sampleStyles["Heading2"]))
 
-        # Dados da tabela
         data = [['Campo de Referência', 'Campo de Entrada', 'Conformidade']]
         for match in matches:
             referenceField = match.referenceField
@@ -239,20 +231,19 @@ def generateReport(iduserdata):
                                    ('GRID', (0, 0), (-1, -1), 1, colors.black)]))
         elements.append(table)
 
-        # Calculando percentual de conformidade
         totalFields = len(matches)
         totalConformFields = tableConformity[tableName]['conform']
         conformityPercentage = (totalConformFields / totalFields) * 100
         conformityPercentage = round(conformityPercentage, 2)
 
-        elements.append(Paragraph(f'Percentual de conformidade: {conformityPercentage}%', titleStyleSecondary))
+        elements.append(Paragraph(f'Percentual de conformidade: {conformityPercentage}%', sampleStyles["Normal"]))
 
-    # Calculando percentual geral de conformidade
     overallConformityPercentage = (sum(tc['conform'] for tc in tableConformity.values()) / sum(len(td) for td in tableData.values())) * 100
     overallConformityPercentage = round(overallConformityPercentage, 2)
-    elements.append(Paragraph(f'Percentual geral de conformidade: {overallConformityPercentage}%', titleStyleSecondary))
+    elements.append(Paragraph(f'<b>Percentual geral de conformidade: {overallConformityPercentage}%</b>', sampleStyles["Bold"]))
 
-    # Construindo o documento
+    elements.append(Paragraph("<br/><br/>", sampleStyles["Normal"]))
+
     doc.build(elements)
 
     pdfContent = buffer.getvalue()
