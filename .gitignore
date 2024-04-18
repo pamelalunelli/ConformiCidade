@@ -10304,3 +10304,17 @@ projeto/api/__pycache__/forms.cpython-311.pyc
 projeto/api/__pycache__/models.cpython-311.pyc
 projeto/api/__pycache__/urls.cpython-311.pyc
 projeto/api/__pycache__/views.cpython-311.pyc
+projeto/api/__pycache__/db_utils.cpython-311.pyc
+projeto/api/__pycache__/forms.cpython-311.pyc
+projeto/api/__pycache__/models.cpython-311.pyc
+projeto/api/__pycache__/urls.cpython-311.pyc
+projeto/api/__pycache__/views.cpython-311.pyc
+projeto/projeto/__pycache__/settings.cpython-311.pyc
+venv/Lib/site-packages/fpdf/__init__.py
+venv/Lib/site-packages/fpdf/fonts.py
+venv/Lib/site-packages/fpdf/fpdf.py
+venv/Lib/site-packages/fpdf/html.py
+venv/Lib/site-packages/fpdf/php.py
+venv/Lib/site-packages/fpdf/py3k.py
+venv/Lib/site-packages/fpdf/template.py
+venv/Lib/site-packages/fpdf/ttfonts.py
