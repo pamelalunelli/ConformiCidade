@@ -51,19 +51,32 @@ def uploadFile(request):
                 arquivo_formatado = arquivo_csv.read().decode('utf-8').splitlines()
                 
                 cabecalho = arquivo_formatado[0]
+
+                if cabecalho.startswith('\ufeff'):
+                    cabecalho = cabecalho[1:]
+
                 campos = cabecalho.split(',')
 
-                dados_csv = []
+                if len(arquivo_formatado) > 1:
+                    dados_csv = []
 
-                tabela_nome = f"input_{int(time.time())}"
+                    tabela_nome = f"input_{int(time.time())}"
 
-                modelo_dinamico = ModeloDinamico.objects.create(nome=nome_arquivo)
-                id = modelo_dinamico.id
+                    modelo_dinamico = ModeloDinamico.objects.create(nome=nome_arquivo)
+                    id = modelo_dinamico.id
 
-                createTable(tabela_nome, campos, dados_csv, id)
+                    createTable(tabela_nome, campos, dados_csv, id)
 
-                modelo_dinamico.data = json.dumps(dados_csv)
-                modelo_dinamico.save()
+                    modelo_dinamico.data = json.dumps(dados_csv)
+                    modelo_dinamico.save()
+                else:
+                    dados_csv = campos
+                    tabela_nome = f"input_{int(time.time())}"
+
+                    modelo_dinamico = ModeloDinamico.objects.create(nome=nome_arquivo)
+                    id = modelo_dinamico.id
+                    modelo_dinamico.data = json.dumps(dados_csv)
+                    modelo_dinamico.save()
 
                 response_data = {'id': id, 'fields': campos, 'tableName': tabela_nome}
                 print("response_data")

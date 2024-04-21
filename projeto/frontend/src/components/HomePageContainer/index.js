@@ -85,7 +85,7 @@ const HomePageContainer = () => {
             Arquivo de Entrada
           </StyledHomePageContainer.Reference.Title>
           <StyledHomePageContainer.Paragraph>
-            O arquivo a ser carregado deve ser um comma-separated value (*.csv) e deve conter, obrigatoriamente, em sua primeira linha, os nomes dos campos a serem mapeados no processo. O arquivo pode ou não conter dados.
+            O arquivo a ser carregado deve ser um comma-separated value (*.csv) ou de texto (*.txt) e deve conter, obrigatoriamente, em sua primeira linha, os nomes dos campos a serem mapeados no processo. O arquivo pode ou não conter dados.
           </StyledHomePageContainer.Paragraph>
         </div>
         <div>

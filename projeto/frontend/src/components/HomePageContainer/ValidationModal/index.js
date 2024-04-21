@@ -87,7 +87,7 @@ const ValidationModal = ({
     };
 
     return (
-        <StyledValidationModal isOpen={modalIsOpen} onClose={closeModal} title={'Valide seus dados'} subtitle={'Lorem ipsum dolor sit amet consectetur. Nisi nec quis sagittis placerat amet amet ridiculus lorem.'} primaryButtonLabel={'Enviar'} btnType={'submit'}>
+        <StyledValidationModal isOpen={modalIsOpen} onClose={closeModal} title={'Valide seus dados'} subtitle={'Para cada campo da esquerda (modelo de referência), encontre o correspondente no seu modelo de entrada. Caso não encontre correspondência, você pode deixar o campo vazio.'} primaryButtonLabel={'Enviar'} btnType={'submit'}>
             {isFetching ? <Loader /> : (
                 <Formik initialValues={initialValues} onSubmit={handleSubmit}>
                     {({ setFieldValue }) => (
