@@ -10393,3 +10393,15 @@ venv/Lib/site-packages/geopy-2.4.1.dist-info/RECORD
 venv/Lib/site-packages/geopy-2.4.1.dist-info/REQUESTED
 venv/Lib/site-packages/geopy-2.4.1.dist-info/top_level.txt
 venv/Lib/site-packages/geopy-2.4.1.dist-info/WHEEL
+venv/Lib/site-packages/fpdf-1.7.2.dist-info/INSTALLER
+venv/Lib/site-packages/fpdf-1.7.2.dist-info/METADATA
+venv/Lib/site-packages/fpdf-1.7.2.dist-info/RECORD
+venv/Lib/site-packages/fpdf-1.7.2.dist-info/REQUESTED
+venv/Lib/site-packages/fpdf-1.7.2.dist-info/top_level.txt
+venv/Lib/site-packages/fpdf-1.7.2.dist-info/WHEEL
+projeto/projeto/__pycache__/settings.cpython-311.pyc
+projeto/api/__pycache__/db_utils.cpython-311.pyc
+projeto/api/__pycache__/forms.cpython-311.pyc
+projeto/api/__pycache__/models.cpython-311.pyc
+projeto/api/__pycache__/urls.cpython-311.pyc
+projeto/api/__pycache__/views.cpython-311.pyc
