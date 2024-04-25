@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import CustomUser
-import secrets
+from rest_framework.authtoken.models import Token
+
 
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:

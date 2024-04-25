@@ -1,6 +1,4 @@
-import csv
 import json
-from typing import TextIO
 import time
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -24,13 +22,14 @@ from django.db import connection
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from .models import FieldMatching
-from io import BytesIO
 import base64
 from django.template.loader import render_to_string
-from collections import defaultdict
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from fpdf import FPDF
+import re
+from django.contrib.auth.decorators import login_required
+from rest_framework.authtoken.models import Token
 
 CustomUser = get_user_model()
 
@@ -38,13 +37,25 @@ CustomUser = get_user_model()
     dialect = csv.Sniffer().sniff(csvFile.read(1024))
     return dialect.delimiter'''
 
+
+import logging
+
+# Configurar o logger
+logger = logging.getLogger(__name__)
+
 @transaction.atomic
 @csrf_exempt
 def uploadFile(request):
+
+    logger.info(f"Upload de arquivo solicitado por: {request.user}")
+
     if request.method == 'POST':
         form = CSVUploadForm(request.POST, request.FILES)
         if form.is_valid():
             try:
+                # Obter o usuário autenticado
+                user = request.user
+
                 arquivo_csv = form.cleaned_data['csv_arq']
                 nome_arquivo = arquivo_csv.name
 
@@ -56,27 +67,35 @@ def uploadFile(request):
                     cabecalho = cabecalho[1:]
 
                 campos = cabecalho.split(',')
+                campos = [cleaningColumnName(campo) for campo in campos]
 
-                if len(arquivo_formatado) > 1:
-                    dados_csv = []
+                dados_csv = []
 
-                    tabela_nome = f"input_{int(time.time())}"
-
-                    modelo_dinamico = ModeloDinamico.objects.create(nome=nome_arquivo)
-                    id = modelo_dinamico.id
-
-                    createTable(tabela_nome, campos, dados_csv, id)
-
-                    modelo_dinamico.data = json.dumps(dados_csv)
-                    modelo_dinamico.save()
+                if len(arquivo_formatado) == 1:
+                    dados_com_cabecalho = [dict(zip(campos, [''] * len(campos)))]
                 else:
-                    dados_csv = campos
-                    tabela_nome = f"input_{int(time.time())}"
+                    for linha in arquivo_formatado[1:]:
+                        dados_linha = linha.split(',')
+                        dados_csv.append(dados_linha)
 
-                    modelo_dinamico = ModeloDinamico.objects.create(nome=nome_arquivo)
-                    id = modelo_dinamico.id
-                    modelo_dinamico.data = json.dumps(dados_csv)
-                    modelo_dinamico.save()
+                    dados_com_cabecalho = [dict(zip(campos, linha)) for linha in dados_csv]
+
+                tabela_nome = f"input_{int(time.time())}"
+
+                #modelo_dinamico = ModeloDinamico.objects.create(nome=nome_arquivo, iduser=user)
+                modelo_dinamico = ModeloDinamico.objects.create(nome=nome_arquivo)
+                id = modelo_dinamico.id
+
+                # Convertendo os dados em JSON
+                dados_json = json.dumps(dados_com_cabecalho)
+
+                # Salvando os dados JSON no objeto modelo_dinamico
+                modelo_dinamico.dataJSON = dados_json
+
+                # Salvando os dados CSV no objeto modelo_dinamico
+                modelo_dinamico.dataCSV = '\n'.join(arquivo_formatado)
+
+                modelo_dinamico.save()
 
                 response_data = {'id': id, 'fields': campos, 'tableName': tabela_nome}
                 print("response_data")
@@ -93,29 +112,50 @@ def uploadFile(request):
     else:
         return JsonResponse({'error': 'Método não permitido'}, status=405)
 
-def createTable(tabela_nome, campos_renomeados, dados_csv, iduserdata):
+#def createTable(tabela_nome, campos_renomeados, dados_csv, iduserdata):
+def createTable(tabela_nome, campos_renomeados, dados_csv):
     with connection.cursor() as cursor:
         cursor.execute(f"DROP TABLE IF EXISTS {tabela_nome}")
 
+        '''sql_cria_tabela = f"""
+        CREATE TABLE {tabela_nome} (
+            id_pk serial PRIMARY KEY,
+            iduserdata integer,
+            {', '.join([cleaningColumnName(campo) + ' VARCHAR(255)' for campo in campos_renomeados])}
+        )
+        """'''
+
         sql_cria_tabela = f"""
         CREATE TABLE {tabela_nome} (
-            id serial PRIMARY KEY,
-            iduserdata integer,
-            {', '.join([campo + ' VARCHAR(255)' for campo in campos_renomeados])}
+            id_pk serial PRIMARY KEY,
+            {', '.join([cleaningColumnName(campo) + ' VARCHAR(255)' for campo in campos_renomeados])}
         )
         """
+
         print("SQL Criar Tabela:", sql_cria_tabela)
         cursor.execute(sql_cria_tabela)
 
-        sql_insere_tabela = f"""
+        '''sql_insere_tabela = f"""
         INSERT INTO {tabela_nome} (iduserdata, {', '.join(campos_renomeados)})
         VALUES (%s, {', '.join(['%s' for _ in campos_renomeados])})
-        """
+        """'''
+        
+        sql_insere_tabela = f"""
+        INSERT INTO {tabela_nome} ({', '.join(campos_renomeados)})
+        VALUES (%s, {', '.join(['%s' for _ in campos_renomeados])})"""
 
-        values = [[iduserdata] + [linha.get(campo, None) for campo in campos_renomeados] for linha in dados_csv]
+        values = []
+        for linha in dados_csv:
+            #linha_valores = [iduserdata] + linha
+            linha_valores = linha
+            values.append(linha_valores)
 
         print("Valores a serem inseridos:", values)
         cursor.executemany(sql_insere_tabela, values)
+
+def cleaningColumnName(columnName):
+    # Substituir caracteres não alfanuméricos por underscores
+    return re.sub(r'\W|^(?=\d)', '_', columnName)
 
 def userData(request, id):
 

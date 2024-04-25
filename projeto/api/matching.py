@@ -5,8 +5,6 @@ from django.http import HttpResponse, JsonResponse
 import textdistance as td
 import pandas as pd
 
-from django.http import JsonResponse
-
 def createMatchingTable(request):
     if request.method == 'POST':
         try:
@@ -46,14 +44,14 @@ def createMatchingTable(request):
                     sequenceBased_lcsseq FLOAT DEFAULT 0.0,
                     sequenceBased_lcsstr FLOAT DEFAULT 0.0,
                     sequenceBased_ratcliffobershelpsimilarity FLOAT DEFAULT 0.0,
-                    compressionBased_arithmeticcoding FLOAT DEFAULT 0.0,
-                    compressionBased_rle FLOAT DEFAULT 0.0,
-                    compressionBased_bwtrle FLOAT DEFAULT 0.0,
-                    compressionBased_squareroot FLOAT DEFAULT 0.0,
+                    --compressionBased_arithmeticcoding FLOAT DEFAULT 0.0,
+                    --compressionBased_rle FLOAT DEFAULT 0.0,
+                    --compressionBased_bwtrle FLOAT DEFAULT 0.0,
+                    --compressionBased_squareroot FLOAT DEFAULT 0.0,
                     compressionBased_entropy FLOAT DEFAULT 0.0,
-                    compressionBased_bz2 FLOAT DEFAULT 0.0,
-                    compressionBased_lzma FLOAT DEFAULT 0.0,
-                    compressionBased_zlib FLOAT DEFAULT 0.0,
+                    --compressionBased_bz2 FLOAT DEFAULT 0.0,
+                    --compressionBased_lzma FLOAT DEFAULT 0.0,
+                    --compressionBased_zlib FLOAT DEFAULT 0.0,
                     phonetic_mra FLOAT DEFAULT 0.0,
                     phonetic_editex FLOAT DEFAULT 0.0,
                     simple_prefix FLOAT DEFAULT 0.0,
@@ -149,14 +147,14 @@ def calculatingSimilarity(tableName):
             sequenceBasedLCSSeq = td.lcsseq.normalized_similarity(inputFieldDB, referenceFieldDB)
             sequenceBasedLCSStr = td.lcsstr.normalized_similarity(inputFieldDB, referenceFieldDB)
             sequenceBasedRatcliffObershelpSimilarity = td.ratcliff_obershelp.normalized_similarity(inputFieldDB, referenceFieldDB)
-            compressionBasedArithmeticcoding = td.arith_ncd.normalized_similarity(inputFieldDB, referenceFieldDB)
-            compressionBasedRLE = td.rle_ncd.normalized_similarity(inputFieldDB, referenceFieldDB)
-            compressionBasedBWTRLE = td.bwtrle_ncd.normalized_similarity(inputFieldDB, referenceFieldDB)
-            compressionBasedSquareroot = td.sqrt_ncd.normalized_similarity(inputFieldDB, referenceFieldDB)
+            #compressionBasedArithmeticcoding = td.arith_ncd.normalized_similarity(inputFieldDB, referenceFieldDB)
+            #compressionBasedRLE = td.rle_ncd.normalized_similarity(inputFieldDB, referenceFieldDB)
+            #compressionBasedBWTRLE = td.bwtrle_ncd.normalized_similarity(inputFieldDB, referenceFieldDB)
+            #compressionBasedSquareroot = td.sqrt_ncd.normalized_similarity(inputFieldDB, referenceFieldDB)
             compressionBasedEntropy = td.entropy_ncd.normalized_similarity(inputFieldDB, referenceFieldDB)
-            compressionBasedBZ2 = td.bz2_ncd.normalized_similarity(inputFieldDB, referenceFieldDB)
-            compressionBasedLZMA = td.lzma_ncd.normalized_similarity(inputFieldDB, referenceFieldDB)
-            compressionBasedZlib = td.zlib_ncd.normalized_similarity(inputFieldDB, referenceFieldDB)
+            #compressionBasedBZ2 = td.bz2_ncd.normalized_similarity(inputFieldDB, referenceFieldDB)
+            #compressionBasedLZMA = td.lzma_ncd.normalized_similarity(inputFieldDB, referenceFieldDB)
+            #compressionBasedZlib = td.zlib_ncd.normalized_similarity(inputFieldDB, referenceFieldDB)
             phoneticMRA = td.mra.normalized_similarity(inputFieldDB, referenceFieldDB)
             phoneticEditex = td.editex.normalized_similarity(inputFieldDB, referenceFieldDB)
             simplePrefix = td.prefix.normalized_similarity(inputFieldDB, referenceFieldDB)
@@ -164,7 +162,8 @@ def calculatingSimilarity(tableName):
             simpleLength = td.length.normalized_similarity(inputFieldDB, referenceFieldDB)
             simpleIdentity = td.identity.normalized_similarity(inputFieldDB, referenceFieldDB)
             simpleMatrix = td.matrix.normalized_similarity(inputFieldDB, referenceFieldDB)
-            generalIndex = (editBasedHamming*0.25)  + (editBasedLevenshtein*0.25) + (simplePrefix*0.5)
+            #generalIndex = (editBasedHamming*0.25)  + (editBasedLevenshtein*0.25) + (simplePrefix*0.5)
+            generalIndex = (editBasedLevenshtein + sequenceBasedLCSStr)/2
 
             cursor.execute(f"""
                             UPDATE {tableName}
@@ -188,14 +187,7 @@ def calculatingSimilarity(tableName):
                                 sequenceBased_lcsseq = {sequenceBasedLCSSeq},
                                 sequenceBased_lcsstr = {sequenceBasedLCSStr},
                                 sequenceBased_ratcliffobershelpsimilarity = {sequenceBasedRatcliffObershelpSimilarity},
-                                compressionBased_arithmeticcoding = {compressionBasedArithmeticcoding},
-                                compressionBased_rle = {compressionBasedRLE},
-                                compressionBased_bwtrle = {compressionBasedBWTRLE},
-                                compressionBased_squareroot = {compressionBasedSquareroot},
                                 compressionBased_entropy = {compressionBasedEntropy},
-                                compressionBased_bz2 = {compressionBasedBZ2},
-                                compressionBased_lzma = {compressionBasedLZMA},
-                                compressionBased_zlib = {compressionBasedZlib},
                                 phonetic_mra = {phoneticMRA},
                                 phonetic_editex = {phoneticEditex},
                                 simple_prefix = {simplePrefix},
