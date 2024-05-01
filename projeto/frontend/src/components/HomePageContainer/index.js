@@ -3,7 +3,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
-import { getCookie } from './cookieUtils';
+import { getCookie } from '../Utils/cookieUtils';
 
 import { InputFile, Field } from '../library/inputs';
 import ValidationModal from './ValidationModal';
@@ -32,9 +32,9 @@ const HomePageContainer = () => {
   const [userDataId, setUserDataId] = useState('');
 
   useEffect(() => {
-    const token = getCookie('csrftoken');
-    setCsrfToken(token);
-  }, []);
+    const csrftoken = getCookie('csrftoken')
+    setCsrfToken(csrftoken)
+  }, [])
 
   const openModal = () => setIsOpen(true);
 
@@ -47,7 +47,10 @@ const HomePageContainer = () => {
     
     try {
       const response = await axios.post('/api/upload/', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'X-CSRFToken': csrfToken // Inclua o token CSRF no cabeçalho
+        },
       });
       if (response.status === 200) {
         const userDataId = response.data.id;

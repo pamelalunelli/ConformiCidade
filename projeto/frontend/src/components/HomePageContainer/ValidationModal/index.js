@@ -93,8 +93,8 @@ const ValidationModal = ({
                     {({ setFieldValue }) => (
                         <Form id={'validation-form-id'}>
                             <Slider totalSlides={defaultList.length} currentSlide={currentSlide} setCurrentSlide={setCurrentSlide}>
-                                {defaultList.map(dl => (
-                                    <StyledValidationModal.Container key={dl.name}>
+                                {defaultList.map((dl, index) => (
+                                    <StyledValidationModal.Container key={index}>
                                         <div>
                                             <StyledValidationModal.List.Title>{dl.name}</StyledValidationModal.List.Title>
                                             <StyledValidationModal.List.Subtitle>Campos de Referência</StyledValidationModal.List.Subtitle>
