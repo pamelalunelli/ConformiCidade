@@ -4,62 +4,79 @@ import { toast } from 'react-toastify';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import { getCookie } from '../Utils/cookieUtils';
-
+import MatchingsNotConcluded from './MatchingsNotConcluded';
 import { InputFile, Field } from '../library/inputs';
 import ValidationModal from './ValidationModal';
-
+import ClipLoader from "react-spinners/ClipLoader";
 import { StyledHomePageContainer } from './styles';
+import ERDiagram from '../../../static/images/ERDiagram.jpg'
+
 
 const fileSchema = (required) => {
   return Yup.mixed().test('csv_arq', 'É necessário fornecer um arquivo', (value) => {
     if (!required) {
-        return true;
+      return true;
     }
-      return !!value;
-    });
-  };
+    return !!value;
+  });
+};
 
 const schema = Yup.object().shape({
   fileName: Yup.string(),
-  csv_arq: fileSchema(true)
+  csv_arq: fileSchema(true),
 });
 
 const HomePageContainer = () => {
-
   const [modalIsOpen, setIsOpen] = useState(false);
-  const [userData, setUserData ] = useState(null);
+  const [userData, setUserData] = useState(null);
   const [csrfToken, setCsrfToken] = useState('');
   const [userDataId, setUserDataId] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false); // State for spinner visibility
 
   useEffect(() => {
-    const csrftoken = getCookie('csrftoken')
-    setCsrfToken(csrftoken)
-  }, [])
+    const csrftoken = getCookie('csrftoken');
+    setCsrfToken(csrftoken);
+  }, []);
 
   const openModal = () => setIsOpen(true);
 
   const closeModal = () => setIsOpen(false);
 
   const handleSubmit = async (values, { resetForm }) => {
+    setIsSubmitting(true);
+
     const formData = new FormData();
     formData.append('csv_arq', values.csv_arq);
     formData.append('csrfmiddlewaretoken', csrfToken);
-    
+
     try {
       const response = await axios.post('/api/upload/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-          'X-CSRFToken': csrfToken // Inclua o token CSRF no cabeçalho
+          'X-CSRFToken': csrfToken,
         },
       });
+
       if (response.status === 200) {
         const userDataId = response.data.id;
-        setUserDataId(userDataId); // Set userDataId here
+        setUserDataId(userDataId);
+
         const fieldsCSV = response.data.fields;
         const tableNameCSV = response.data.tableName;
+
         try {
-          const matchingTableName = await axios.post(`/api/create_matching_table/`,  tableNameCSV, { headers: { 'Content-Type': 'application/json' } });
-          const userDataResponse = await axios.post(`/api/populate_matching_fields/`, { matchingTableName, fieldsCSV, userDataId}, { headers: { 'Content-Type': 'application/json' } });
+          const matchingTableName = await axios.post(
+            `/api/create_matching_table/`,
+            tableNameCSV,
+            { headers: { 'Content-Type': 'application/json' } }
+          );
+
+          const userDataResponse = await axios.post(
+            `/api/populate_matching_fields/`,
+            { matchingTableName, fieldsCSV, userDataId },
+            { headers: { 'Content-Type': 'application/json' } }
+          );
+
           setUserData(userDataResponse.data);
           openModal();
           resetForm();
@@ -71,7 +88,9 @@ const HomePageContainer = () => {
       }
     } catch (error) {
       toast.error('Ocorreu um erro ao enviar seu arquivo');
-    }      
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -91,14 +110,21 @@ const HomePageContainer = () => {
             O arquivo a ser carregado deve ser um comma-separated value (*.csv) ou de texto (*.txt) e deve conter, obrigatoriamente, em sua primeira linha, os nomes dos campos a serem mapeados no processo. O arquivo pode ou não conter dados.
           </StyledHomePageContainer.Paragraph>
         </div>
-        <div>
-          <img src='' alt="Reference Image"/>
-        </div>
+        <StyledHomePageContainer>
+          <div style={{ textAlign: 'center' }}>
+            <a href={ERDiagram} target="_blank" rel="noopener noreferrer">
+              <img src={ERDiagram} alt="Diagrama Entidade-Relacionamento" height="200" />
+            </a>
+            <StyledHomePageContainer.Paragraph>
+              Clique na imagem para <br /> ampliar o diagrama
+            </StyledHomePageContainer.Paragraph>
+          </div>
+        </StyledHomePageContainer>
       </StyledHomePageContainer.Reference>
       <Formik initialValues={{fileName: '', csv_arq: null}}
               validationSchema={schema}
               onSubmit={handleSubmit}>
-        {({erros, isSubmitting, isValid, dirty, setFieldValue}) => (
+        {({erros, isValid, dirty, setFieldValue}) => (
           <StyledHomePageContainer.Form>
             <Field label='Dê um nome para seu arquivo (opcional)'
                     id='file-name-id'
@@ -114,14 +140,24 @@ const HomePageContainer = () => {
                     }}
                     as={InputFile}/>
             <StyledHomePageContainer.Form.Submit type='submit' disabled={!isValid || isSubmitting || !dirty}>
-              Enviar
+              {isSubmitting ? (
+                <ClipLoader // Use the ClipLoader component
+                  size={35} // Adjust size as needed
+                  color={'#ffffff'} // Customize color
+                />
+              ) : (
+                <span>Enviar</span>
+              )}
             </StyledHomePageContainer.Form.Submit>
           </StyledHomePageContainer.Form>
         )}
       </Formik>
+      <StyledHomePageContainer>
+        <MatchingsNotConcluded />
+      </StyledHomePageContainer>
       <ValidationModal modalIsOpen={modalIsOpen} closeModal={closeModal} userData={userData} userDataId={userDataId} /> {/* Pass userDataId to ValidationModal */}
     </>
-  )
-}
+  );
+};
 
 export default HomePageContainer;

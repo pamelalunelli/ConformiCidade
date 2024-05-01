@@ -21,7 +21,7 @@ const InputFile = ({
         <StyledInputFile {...props} onClick={handleClick} disabled={disabled}>
             <input id={id} name={name} disabled={disabled} ref={inputRef} onChange={onChange} type='file'/>
             <StyledInputFile.FakeButton>
-                Selecionar arquivo .csv
+                Selecionar arquivo (*.csv ou *.txt)
             </StyledInputFile.FakeButton>
             <StyledInputFile.FakeInput>
                 {value?.name}
