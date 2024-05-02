@@ -7,12 +7,12 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import get_user_model
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import CreateAPIView
 from rest_framework.authtoken.models import Token
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, login
 from .forms import CSVUploadForm
 from .models import *
 from .serializers import CustomUserSerializer
@@ -30,6 +30,7 @@ from fpdf import FPDF
 import re
 from django.contrib.auth.decorators import login_required
 from rest_framework.authtoken.models import Token
+from api.models import CustomUser
 
 CustomUser = get_user_model()
 
@@ -38,23 +39,22 @@ CustomUser = get_user_model()
     return dialect.delimiter'''
 
 
-import logging
-
-# Configurar o logger
-logger = logging.getLogger(__name__)
-
+#@login_required
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 @transaction.atomic
 @csrf_exempt
 def uploadFile(request):
-
-    logger.info(f"Upload de arquivo solicitado por: {request.user}")
 
     if request.method == 'POST':
         form = CSVUploadForm(request.POST, request.FILES)
         if form.is_valid():
             try:
-                # Obter o usuário autenticado
-                user = request.user
+                try:
+                    iduser_id = CustomUser.objects.get(username=request.user).id
+                except CustomUser.DoesNotExist:
+                    # Lidar com o caso em que o usuário não é encontrado
+                    iduser_id = None
 
                 arquivo_csv = form.cleaned_data['csv_arq']
                 nome_arquivo = arquivo_csv.name
@@ -95,6 +95,8 @@ def uploadFile(request):
                 # Salvando os dados CSV no objeto modelo_dinamico
                 modelo_dinamico.dataCSV = '\n'.join(arquivo_formatado)
 
+                modelo_dinamico.iduser = iduser_id
+                modelo_dinamico.matchingTableName = "matching_" + tabela_nome.replace('"', '')
                 modelo_dinamico.save()
 
                 response_data = {'id': id, 'fields': campos, 'tableName': tabela_nome}
@@ -112,6 +114,7 @@ def uploadFile(request):
     else:
         return JsonResponse({'error': 'Método não permitido'}, status=405)
 
+@csrf_exempt
 #def createTable(tabela_nome, campos_renomeados, dados_csv, iduserdata):
 def createTable(tabela_nome, campos_renomeados, dados_csv):
     with connection.cursor() as cursor:
@@ -153,10 +156,12 @@ def createTable(tabela_nome, campos_renomeados, dados_csv):
         print("Valores a serem inseridos:", values)
         cursor.executemany(sql_insere_tabela, values)
 
+@csrf_exempt
 def cleaningColumnName(columnName):
     # Substituir caracteres não alfanuméricos por underscores
     return re.sub(r'\W|^(?=\d)', '_', columnName)
 
+@csrf_exempt
 def userData(request, id):
 
     modelo_dinamico = get_object_or_404(ModeloDinamico, id=id)
@@ -174,6 +179,7 @@ def userData(request, id):
 
     return JsonResponse(fieldsName, safe=False)
 
+@csrf_exempt
 def defaultDataTable(request):
 
     excludedTables = ['FieldMatching', 'ModeloDinamico', 'CustomUser', 'AdminUser']
@@ -356,11 +362,21 @@ def login(request):
             'email': user.email,
         }
         token, created = Token.objects.get_or_create(user=user)
+        print("esse é o token_key", token.key)
+        print("esse é o user_info", user_info)
+
+        # Crie um objeto HttpRequest apropriado
+        #django_request = HttpRequest()
+        #django_request.method = 'POST'
+        #django_request.POST = request.data
+
+        # Chame a função login() passando o objeto HttpRequest
+        #login(django_request, user)
 
         return Response({'token': token.key, 'user_info': user_info}, status=status.HTTP_200_OK)
     else:
         return Response({'error': 'Credenciais inválidas'}, status=status.HTTP_401_UNAUTHORIZED)
-
+    
 class RegisterView(CreateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
@@ -371,3 +387,12 @@ class CheckAvailabilityView(CreateAPIView):
         usernames = CustomUser.objects.values_list('username', flat=True)
 
         return Response({'emails': emails, 'usernames': usernames}, status=status.HTTP_200_OK)
+    
+def minha_view(request):
+    print("Usuário autenticado:", request.user.is_authenticated)
+    if request.user.is_authenticated:
+        # Usuário autenticado, faça o que precisar aqui
+        return JsonResponse({'message': 'Usuário está logado'})
+    else:
+        # Usuário não autenticado, pode retornar uma resposta de erro ou redirecionar para a página de login
+        return JsonResponse({'error': 'Usuário não está logado'}, status=401)

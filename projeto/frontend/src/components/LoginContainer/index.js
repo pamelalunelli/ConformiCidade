@@ -9,6 +9,8 @@ import { usePaths } from '../Utils/utils';
 import { useUser } from '../Utils/user-utils';
 import { Eye, EyeSlash } from '../library/icons';
 import { Field } from '../library/inputs';
+import { useToken } from '../../TokenContext'; // Importe o hook useToken
+
 
 const schema = Yup.object().shape({
     username: Yup.string().required('Campo obrigatório'),
@@ -22,6 +24,7 @@ const LoginContainer = () => {
     const paths = usePaths();
     const history = useHistory();
     const { updateUser } = useUser();
+    const { setToken } = useToken(); // Use o hook useToken para acessar a função setToken do contexto
 
     const isMounted = useRef(true);
     const [showPassword, setShowPassword] = useState(false);
@@ -44,6 +47,7 @@ const LoginContainer = () => {
 
                 const { token, ...userDetails } = response.data;
                 updateUser(userDetails);
+                setToken(token);
 
                 history.push(paths.home());
             }
@@ -62,6 +66,7 @@ const LoginContainer = () => {
     // Função para obter o cookie CSRF
     const getCookie = (name) => {
         const cookieValue = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+        console.log(cookieValue)
         return cookieValue ? cookieValue.pop() : '';
     };
 

@@ -88,11 +88,12 @@ class Endereco(models.Model):
     cep_End =  models.IntegerField(null=True)
 
 class ModeloDinamico(models.Model):
-    iduser = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
+    iduser = models.IntegerField(null=True)
     nome = models.CharField(max_length=255, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
     dataCSV = models.TextField()
     dataJSON = models.TextField()
+    matchingTableName = models.CharField(max_length=255, null=True)
 
 '''class AdminUser(models.Model):
     id = models.AutoField(primary_key=True)

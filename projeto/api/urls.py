@@ -19,4 +19,5 @@ urlpatterns = [
     path('register/', views.RegisterView.as_view(), name='register'),
     #path('login/', obtain_auth_token, name='login'),
     path('login/', views.login, name='login'),
+    path('minha_view/', views.minha_view, name='minhaView'),
 ]

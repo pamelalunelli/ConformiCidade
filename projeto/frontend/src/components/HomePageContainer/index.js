@@ -9,8 +9,8 @@ import { InputFile, Field } from '../library/inputs';
 import ValidationModal from './ValidationModal';
 import ClipLoader from "react-spinners/ClipLoader";
 import { StyledHomePageContainer } from './styles';
-import ERDiagram from '../../../static/images/ERDiagram.jpg'
-
+import ERDiagram from '../../../static/images/ERDiagram.jpg';
+import { useToken } from '../../TokenContext.js'; // Importe o hook useToken
 
 const fileSchema = (required) => {
   return Yup.mixed().test('csv_arq', 'É necessário fornecer um arquivo', (value) => {
@@ -27,6 +27,8 @@ const schema = Yup.object().shape({
 });
 
 const HomePageContainer = () => {
+  const { token } = useToken(); // Use o hook useToken para acessar o token global
+
   const [modalIsOpen, setIsOpen] = useState(false);
   const [userData, setUserData] = useState(null);
   const [csrfToken, setCsrfToken] = useState('');
@@ -39,7 +41,6 @@ const HomePageContainer = () => {
   }, []);
 
   const openModal = () => setIsOpen(true);
-
   const closeModal = () => setIsOpen(false);
 
   const handleSubmit = async (values, { resetForm }) => {
@@ -47,13 +48,14 @@ const HomePageContainer = () => {
 
     const formData = new FormData();
     formData.append('csv_arq', values.csv_arq);
-    formData.append('csrfmiddlewaretoken', csrfToken);
+    formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
 
     try {
       const response = await axios.post('/api/upload/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-          'X-CSRFToken': csrfToken,
+          'X-CSRFToken': getCookie('csrftoken'),
+          'Authorization': `Token ${token}`, // Use o token global aqui
         },
       });
 
