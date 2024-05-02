@@ -4,7 +4,9 @@ from django.db import connection
 from django.http import HttpResponse, JsonResponse
 import textdistance as td
 import pandas as pd
+from django.views.decorators.csrf import csrf_exempt
 
+@csrf_exempt
 def createMatchingTable(request):
     if request.method == 'POST':
         try:
@@ -70,6 +72,7 @@ def createMatchingTable(request):
 
     return JsonResponse({'error': 'Método não permitido'}, status=405)
 
+@csrf_exempt
 def populateMatchingFields(request):
     if request.method == 'POST':
         try:
@@ -103,7 +106,8 @@ def populateMatchingFields(request):
             return JsonResponse({'error': str(e)}, status=500)
     else:
         return JsonResponse({'error': 'Method Not Allowed'}, status=405)
-    
+
+@csrf_exempt
 def getReferenceFields():
     referenceFields = []
 
@@ -114,6 +118,7 @@ def getReferenceFields():
 
     return referenceFields
 
+@csrf_exempt
 def calculatingSimilarity(tableName):
     
     with connection.cursor() as cursor:
@@ -202,6 +207,7 @@ def calculatingSimilarity(tableName):
 
         connection.commit()
 
+@csrf_exempt
 def findMostProbableReferences(tableName, topN=5):
     with connection.cursor() as cursor:
         query = f"""
@@ -219,7 +225,7 @@ def findMostProbableReferences(tableName, topN=5):
     for referencefield, group in grouped:
         topReferences = group.nlargest(topN, 'generalindex')['inputfield'].tolist()
         remainingReferences = group[~group['inputfield'].isin(topReferences)]['inputfield'].tolist()
-        combinedReferences = topReferences + sorted(remainingReferences)
+        combinedReferences = ['SUGESTÃO'] + topReferences + ['ORDEM ALFABÉTICA'] + sorted(remainingReferences)
         mostProbableReferences[referencefield] = combinedReferences
 
     return json.dumps(mostProbableReferences, indent=4)

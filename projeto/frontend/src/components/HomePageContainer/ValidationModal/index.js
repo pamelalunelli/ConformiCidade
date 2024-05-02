@@ -40,13 +40,17 @@ const ValidationModal = ({
         if (userData && userData.topReferencesJSON) {
             const parsedData = JSON.parse(userData.topReferencesJSON);
             const fieldValues = parsedData[fieldName];
+            const decodedFieldName = fieldName.replace(/\\u([\d\w]{4})/gi, (match, grp) => String.fromCharCode(parseInt(grp, 16)));
+            if (fieldValues && (decodedFieldName === 'SUGESTÃO' || decodedFieldName === 'ORDEM ALFABÉTICA')) {
+                return null; // Retorna um array vazio para os campos 'SUGESTÃO' e 'ORDEM ALFABÉTICA'
+            }
             if (fieldValues) {
                 return fieldValues;
             }
         }
         return [];
-    };    
-
+    };
+      
     const initialValues = defaultList.reduce((acc, modelo) => {
         acc[modelo.name] = modelo.fields.reduce((fields, campo) => {
             fields[campo] = '';
@@ -117,13 +121,19 @@ const ValidationModal = ({
                                             <StyledValidationModal.List>
                                                 {dl.fields.map((field, i) => (
                                                     <li key={`${dl.name}-${i}`}>
-                                                        <Field
-                                                            component={StyledValidationModal.Select}
-                                                            name={`${dl.name}.${field}`}
-                                                            options={parseUserData(field).map(data => ({ value: data, label: data }))}
-                                                            placeholder='Selecione...'
-                                                            onChange={(e) => setFieldValue(`${dl.name}.${field}`, e.value)}
-                                                        />
+                                                        {field === 'SUGESTÃO' || field === 'ORDEM ALFABÉTICA' ? (
+                                                            <StyledValidationModal.DisabledField key={`${dl.name}-${i}`}>
+                                                                {field}
+                                                            </StyledValidationModal.DisabledField>
+                                                        ) : (
+                                                            <Field
+                                                                component={StyledValidationModal.Select}
+                                                                name={`${dl.name}.${field}`}
+                                                                options={parseUserData(field).map(data => ({ value: data, label: data }))}
+                                                                placeholder='Selecione...'
+                                                                onChange={(e) => setFieldValue(`${dl.name}.${field}`, e.value)}
+                                                            />
+                                                        )}
                                                     </li>
                                                 ))}
                                             </StyledValidationModal.List>

@@ -95,3 +95,10 @@ export const InfoIcon = styled.span`
     margin-left: 5px;
     // Adicione mais estilos conforme necessário
 `;
+
+StyledValidationModal.DisabledField = styled.div`
+    border: 1px solid #ccc; /* Adiciona uma borda para indicar que o campo está desativado */
+    padding: 5px;
+    background-color: #f5f5f5; /* Adiciona um fundo para destacar o campo desativado */
+    cursor: not-allowed; /* Altera o cursor para indicar que o campo não é clicável */
+`;
