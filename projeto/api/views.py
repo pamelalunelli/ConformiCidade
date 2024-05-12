@@ -21,15 +21,11 @@ from django.apps import apps
 from django.db import connection
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
-from .models import FieldMatching
 import base64
 from django.template.loader import render_to_string
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
-from fpdf import FPDF
 import re
-from django.contrib.auth.decorators import login_required
-from rest_framework.authtoken.models import Token
 from api.models import CustomUser
 
 CustomUser = get_user_model()
@@ -202,22 +198,65 @@ def defaultDataTable(request):
     return JsonResponse(tables, safe=False)
 
 @csrf_exempt
-def processForm (request):
+def autosaveForm(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
             iduserdata = data.pop('userDataId', None)  
 
-            inputFieldTestList = []
+            # Salvando as escolhas do usuário
+            user_choices = {}  # Dicionário para armazenar as escolhas do usuário
             for tableNameTest, fieldsData in data.items():
                 for referenceFieldTest, inputFieldTest in fieldsData.items():
-                    FieldMatching.objects.create(
+                    # Verificar se o campo está preenchido pelo usuário
+                    if inputFieldTest.strip():  # Ignora campos vazios
+                        # Verificar se já existe um registro para essa combinação de campos
+                        existing_field_matching = FieldMatching.objects.filter(
+                            referenceField=referenceFieldTest,
+                            tableName=tableNameTest,
+                            iduserdata=iduserdata
+                        ).first()
+                        # Se já existir, atualize o campo
+                        if existing_field_matching:
+                            existing_field_matching.inputField = inputFieldTest
+                            existing_field_matching.save()
+                        else:
+                            # Se não existir, crie um novo registro
+                            FieldMatching.objects.create(
+                                inputField=inputFieldTest,
+                                referenceField=referenceFieldTest,
+                                tableName=tableNameTest,
+                                iduserdata=iduserdata
+                            )
+                        user_choices.setdefault(tableNameTest, {})[referenceFieldTest] = inputFieldTest
+            
+            # Opcional: Você pode adicionar uma resposta personalizada aqui se desejar
+            
+            return HttpResponse("Dados salvos automaticamente", status=200)
+
+        except Exception as e:
+            return HttpResponse("Ocorreu um erro ao processar os dados: " + str(e), status=500)
+
+@csrf_exempt
+def processForm(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            iduserdata = data.pop('userDataId', None)  
+
+            for tableNameTest, fieldsData in data.items():
+                for referenceFieldTest, inputFieldTest in fieldsData.items():
+                    # Verificar se já existe um registro para essa combinação de campos
+                    field_matching, created = FieldMatching.objects.get_or_create(
                         inputField=inputFieldTest,
                         referenceField=referenceFieldTest,
                         tableName=tableNameTest,
                         iduserdata=iduserdata
                     )
-                    inputFieldTestList.append(inputFieldTest)
+                    # Se o registro já existir, atualize os campos
+                    if not created:
+                        field_matching.inputField = inputFieldTest
+                        field_matching.save()
             
             response = generateReport(iduserdata)
 
@@ -227,11 +266,6 @@ def processForm (request):
 
         except Exception as e:
             return HttpResponse("Ocorreu um erro ao processar os dados: " + str(e), status=500)
-
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
 def generateReport(iduserdata):
     response = HttpResponse(content_type='application/pdf')
@@ -312,8 +346,24 @@ def generateReport(iduserdata):
 
     return response
 
+@api_view(['GET'])
+@csrf_exempt 
+@permission_classes([IsAuthenticated])
 def userHistory(request):
-    return JsonResponse(list(ModeloDinamico.objects.values()), safe=False)
+    try:
+        # Obtém o ID do usuário autenticado
+        userId = CustomUser.objects.get(username=request.user).id
+        
+        print("User id é:", userId)
+
+        # Filtra os modelos dinâmicos associados ao ID do usuário
+        userModels = ModeloDinamico.objects.filter(iduser=userId).values()
+        
+        # Retorna os modelos dinâmicos como uma resposta JSON
+        return JsonResponse(list(userModels), safe=False)
+    except CustomUser.DoesNotExist:
+        # Se o usuário não existir, retorna uma lista vazia
+        return JsonResponse([], safe=False)
 
 @csrf_exempt 
 @require_http_methods(["DELETE"])

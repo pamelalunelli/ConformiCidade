@@ -12,6 +12,7 @@ urlpatterns = [
     path('lista_objetos/<int:id>/', views.userData, name='user_data'),
     path('get_reference_fields/', views.defaultDataTable, name='defaultDataTable'),
     path('process_form/', views.processForm, name='processForm'),
+    path('autosave/', views.autosaveForm, name='autosaveForm'),
     path('userHistory/', views.userHistory, name='userHistory'),
     path('userHistory/<int:id>/delete/', views.userHistoryDelete, name='userHistoryDelete'),
     path('userHistory/<int:id>/edit/', views.userHistoryEdit, name='userHistoryEdit'),

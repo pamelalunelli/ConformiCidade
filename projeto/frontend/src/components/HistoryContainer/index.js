@@ -7,10 +7,11 @@ import { PrimaryButton, SecondaryButton } from '../library/buttons'
 import Loader from '../library/loader'
 
 import { StyledHistoryContainer } from './styles'
+import { useToken } from '../../TokenContext.js';
 
 const HistoryContainer = ({
 }) => {
-
+    const { token } = useToken()
     const [historic, setHistoric] = useState()
     const [isFetching, setIsFetching] = useState(true)
 
@@ -32,7 +33,12 @@ const HistoryContainer = ({
     const fetchObjetos = async () => {
         try {
             setIsFetching(true)
-              const response = await fetch('/api/userHistory/')
+            const response = await fetch('/api/userHistory/', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Token ${token}` // Adicione o token ao cabeçalho Authorization
+                }
+            });
             const data = await response.json()
             setHistoric(data)
         } catch (error) {

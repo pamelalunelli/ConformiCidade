@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PrimaryButton, SecondaryButton } from '../buttons';
 import { StyledSlider } from './styles';
 
@@ -7,20 +7,43 @@ const Slider = ({
   currentSlide,
   setCurrentSlide,
   totalSlides,
+  values,
+  userDataId
 }) => {
   const [selectedList, setSelectedList] = useState([currentSlide]);
 
-  const nextSlide = () => {
+  const handleAutosave = async (values) => {
+    try {
+      const response = await fetch('/api/autosave/', {
+        method: 'POST',
+        body: JSON.stringify({ ...values, userDataId }),
+      });
+      if (!response.ok) {
+        throw new Error('Erro ao salvar dados.');
+      }
+    } catch (error) {
+      console.error('Erro ao salvar dados:', error);
+    }
+  };
+
+  const nextSlide = async () => {
     const nextIndex = currentSlide + 1;
     setSelectedList([...selectedList, nextIndex]);
     setCurrentSlide(nextIndex);
+    await handleAutosave(values);
   };
 
-  const previousSlide = () => {
+  const previousSlide = async () => {
     const previousIndex = currentSlide - 1;
     setSelectedList(selectedList.filter(index => index !== currentSlide));
     setCurrentSlide(previousIndex);
+    await handleAutosave(values);
   };
+
+  useEffect(() => {
+    // Chama a função de autosave sempre que o slide atual mudar
+    handleAutosave(values);
+  }, [currentSlide, values]);
 
   return (
     <StyledSlider>

@@ -42,7 +42,7 @@ const ValidationModal = ({
             const fieldValues = parsedData[fieldName];
             const decodedFieldName = fieldName.replace(/\\u([\d\w]{4})/gi, (match, grp) => String.fromCharCode(parseInt(grp, 16)));
             if (fieldValues && (decodedFieldName === 'SUGESTÃO' || decodedFieldName === 'ORDEM ALFABÉTICA')) {
-                return null; // Retorna um array vazio para os campos 'SUGESTÃO' e 'ORDEM ALFABÉTICA'
+                return null; 
             }
             if (fieldValues) {
                 return fieldValues;
@@ -80,81 +80,81 @@ const ValidationModal = ({
         }
     };
 
-    // Função para exibir informações detalhadas do campo de referência selecionado
-    const showFieldDetails = (field) => {
-        setSelectedField(field);
+        // Função para exibir informações detalhadas do campo de referência selecionado
+        const showFieldDetails = (field) => {
+            setSelectedField(field);
+        };
+    
+        // Função para fechar o painel de informações detalhadas
+        const closeFieldDetails = () => {
+            setSelectedField(null);
+        };
+    
+        return (
+            <StyledValidationModal isOpen={modalIsOpen} onClose={closeModal} title={'Valide seus dados'} subtitle={'Para cada campo da esquerda (modelo de referência), encontre o correspondente no seu modelo de entrada. Caso não encontre correspondência, você pode deixar o campo vazio.'} primaryButtonLabel={'Enviar'} btnType={'submit'}>
+                {isFetching ? <Loader /> : (
+                    <Formik initialValues={initialValues} onSubmit={handleSubmit}>
+                        {({ setFieldValue, values }) => (
+                            <Form id={'validation-form-id'}>
+                                <Slider totalSlides={defaultList.length} currentSlide={currentSlide} setCurrentSlide={setCurrentSlide} values={values} userDataId={userDataId}>
+                                    {defaultList.map((dl, index) => (
+                                        <StyledValidationModal.Container key={index}>
+                                            <div>
+                                                <StyledValidationModal.List.Title>{dl.name}</StyledValidationModal.List.Title>
+                                                <StyledValidationModal.List.Subtitle>Campos de Referência</StyledValidationModal.List.Subtitle>
+                                                <StyledValidationModal.List>
+                                                    {dl.fields.map((field, i) => (
+                                                        <li key={i} onClick={() => showFieldDetails(field)}>
+                                                            <StyledValidationModal.List.FakeSelect>
+                                                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                                    {field}
+                                                                    <InfoCircleOutlined style={{ marginLeft: '5px' }} />
+                                                                </div>
+                                                            </StyledValidationModal.List.FakeSelect>
+                                                        </li>
+                                                    ))}
+                                                </StyledValidationModal.List>
+                                            </div>
+                                            <div>
+                                                <StyledValidationModal.List.Title>&nbsp;</StyledValidationModal.List.Title> {/* Adicione um espaço em branco para manter o alinhamento */}
+                                                <StyledValidationModal.List.Subtitle>Seus campos</StyledValidationModal.List.Subtitle>
+                                                <StyledValidationModal.List>
+                                                    {dl.fields.map((field, i) => (
+                                                        <li key={`${dl.name}-${i}`}>
+                                                            {field === 'SUGESTÃO' || field === 'ORDEM ALFABÉTICA' ? (
+                                                                <StyledValidationModal.DisabledField key={`${dl.name}-${i}`}>
+                                                                    {field}
+                                                                </StyledValidationModal.DisabledField>
+                                                            ) : (
+                                                                <Field
+                                                                    component={StyledValidationModal.Select}
+                                                                    name={`${dl.name}.${field}`}
+                                                                    options={parseUserData(field).map(data => ({ value: data, label: data }))}
+                                                                    placeholder='Selecione...'
+                                                                    onChange={(e) => setFieldValue(`${dl.name}.${field}`, e.value)}
+                                                                />
+                                                            )}
+                                                        </li>
+                                                    ))}
+                                                </StyledValidationModal.List>
+                                            </div>
+                                        </StyledValidationModal.Container>
+                                    ))}
+                                </Slider>
+                                {/* Exibir o painel de informações detalhadas */}
+                                {selectedField && (
+                                    <div className="field-details-panel">
+                                        <h3>{selectedField}</h3>
+                                        <p>Texto genérico com informações sobre o campo de referência selecionado.</p>
+                                        <button onClick={closeFieldDetails}>Fechar</button>
+                                    </div>
+                                )}
+                            </Form>
+                        )}
+                    </Formik>
+                )}
+            </StyledValidationModal>    
+        ); 
     };
-
-    // Função para fechar o painel de informações detalhadas
-    const closeFieldDetails = () => {
-        setSelectedField(null);
-    };
-
-    return (
-        <StyledValidationModal isOpen={modalIsOpen} onClose={closeModal} title={'Valide seus dados'} subtitle={'Para cada campo da esquerda (modelo de referência), encontre o correspondente no seu modelo de entrada. Caso não encontre correspondência, você pode deixar o campo vazio.'} primaryButtonLabel={'Enviar'} btnType={'submit'}>
-            {isFetching ? <Loader /> : (
-                <Formik initialValues={initialValues} onSubmit={handleSubmit}>
-                    {({ setFieldValue }) => (
-                        <Form id={'validation-form-id'}>
-                            <Slider totalSlides={defaultList.length} currentSlide={currentSlide} setCurrentSlide={setCurrentSlide}>
-                                {defaultList.map((dl, index) => (
-                                    <StyledValidationModal.Container key={index}>
-                                        <div>
-                                            <StyledValidationModal.List.Title>{dl.name}</StyledValidationModal.List.Title>
-                                            <StyledValidationModal.List.Subtitle>Campos de Referência</StyledValidationModal.List.Subtitle>
-                                            <StyledValidationModal.List>
-                                                {dl.fields.map((field, i) => (
-                                                    <li key={i} onClick={() => showFieldDetails(field)}>
-                                                        <StyledValidationModal.List.FakeSelect>
-                                                            <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                                {field}
-                                                                <InfoCircleOutlined style={{ marginLeft: '5px' }} />
-                                                            </div>
-                                                        </StyledValidationModal.List.FakeSelect>
-                                                    </li>
-                                                ))}
-                                            </StyledValidationModal.List>
-                                        </div>
-                                        <div>
-                                            <StyledValidationModal.List.Title>&nbsp;</StyledValidationModal.List.Title> {/* Adicione um espaço em branco para manter o alinhamento */}
-                                            <StyledValidationModal.List.Subtitle>Seus campos</StyledValidationModal.List.Subtitle>
-                                            <StyledValidationModal.List>
-                                                {dl.fields.map((field, i) => (
-                                                    <li key={`${dl.name}-${i}`}>
-                                                        {field === 'SUGESTÃO' || field === 'ORDEM ALFABÉTICA' ? (
-                                                            <StyledValidationModal.DisabledField key={`${dl.name}-${i}`}>
-                                                                {field}
-                                                            </StyledValidationModal.DisabledField>
-                                                        ) : (
-                                                            <Field
-                                                                component={StyledValidationModal.Select}
-                                                                name={`${dl.name}.${field}`}
-                                                                options={parseUserData(field).map(data => ({ value: data, label: data }))}
-                                                                placeholder='Selecione...'
-                                                                onChange={(e) => setFieldValue(`${dl.name}.${field}`, e.value)}
-                                                            />
-                                                        )}
-                                                    </li>
-                                                ))}
-                                            </StyledValidationModal.List>
-                                        </div>
-                                    </StyledValidationModal.Container>
-                                ))}
-                            </Slider>
-                            {/* Exibir o painel de informações detalhadas */}
-                            {selectedField && (
-                                <div className="field-details-panel">
-                                    <h3>{selectedField}</h3>
-                                    <p>Texto genérico com informações sobre o campo de referência selecionado.</p>
-                                    <button onClick={closeFieldDetails}>Fechar</button>
-                                </div>
-                            )}
-                        </Form>
-                    )}
-                </Formik>
-            )}
-        </StyledValidationModal>    
-    );
-};
 
 export default ValidationModal;

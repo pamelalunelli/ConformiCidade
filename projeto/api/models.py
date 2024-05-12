@@ -94,6 +94,7 @@ class ModeloDinamico(models.Model):
     dataCSV = models.TextField()
     dataJSON = models.TextField()
     matchingTableName = models.CharField(max_length=255, null=True)
+    isConcluded = models.BooleanField(null=True)
 
 '''class AdminUser(models.Model):
     id = models.AutoField(primary_key=True)
