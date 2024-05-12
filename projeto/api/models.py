@@ -12,6 +12,7 @@ class FieldMatching(models.Model):
     referenceField = models.CharField(max_length=255)
     tableName = models.CharField(max_length=255)
     timestamp = models.DateTimeField(auto_now_add=True)
+    matchingTableName = models.CharField(max_length=255, null=True)
     
     #class Meta:
     #    unique_together = ['usuario', 'nome_campo_entrada']
@@ -94,7 +95,7 @@ class ModeloDinamico(models.Model):
     dataCSV = models.TextField()
     dataJSON = models.TextField()
     matchingTableName = models.CharField(max_length=255, null=True)
-    isConcluded = models.BooleanField(null=True)
+    isConcluded = models.BooleanField(default=False)
 
 '''class AdminUser(models.Model):
     id = models.AutoField(primary_key=True)

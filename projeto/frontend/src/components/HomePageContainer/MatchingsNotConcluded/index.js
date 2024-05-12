@@ -8,9 +8,13 @@ const MatchingsNotConcluded = () => {
     const [historic, setHistoric] = useState([]);
     const [isFetching, setIsFetching] = useState(true);
 
+    useEffect(() => {
+        fetchObjetos();
+    }, []);
+
     const fetchObjetos = async () => {
         try {
-            const response = await fetch('/api/userHistory/', {
+            const response = await fetch('/api/unfinished_matching/', {
                 method: 'GET',
                 headers: {
                     'Authorization': `Token ${token}` // Adicione o token ao cabeçalho Authorization
@@ -27,13 +31,31 @@ const MatchingsNotConcluded = () => {
             setIsFetching(false);
         }
     };
-    
-    useEffect(() => {
-        fetchObjetos();
-    }, []);
+
+    const handleRowClick = async (iduser, id) => {
+        try {
+            const response = await fetch('/api/retrieve_autosaved_fields/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Token ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    iduser,
+                    id
+                })
+            });
+            if (!response.ok) {
+                throw new Error(`Erro ao recuperar campos autosaved: ${response.statusText}`);
+            }
+            toast.success('Campos autosaved recuperados com sucesso!');
+        } catch (error) {
+            toast.error(error.message);
+        }
+    };
 
     return (
-                <div className="matchings-not-concluded">
+        <div className="matchings-not-concluded">
             <h2>Matchings não concluídos</h2>
             {isFetching ? (
                 <Loader />
@@ -48,7 +70,7 @@ const MatchingsNotConcluded = () => {
                     </thead>
                     <tbody>
                         {historic.map(item => (
-                            <tr key={item.id}>
+                            <tr key={item.id} onClick={() => handleRowClick(item.iduser, item.id)}>
                                 <td>{item.nome}</td>
                                 <td>{new Date(item.timestamp).toLocaleDateString()}</td>
                                 <td>{item.matchingTableName}</td>

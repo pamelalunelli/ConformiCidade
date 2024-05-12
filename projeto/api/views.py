@@ -197,36 +197,49 @@ def defaultDataTable(request):
 
     return JsonResponse(tables, safe=False)
 
+@api_view(['POST'])
 @csrf_exempt
 def autosaveForm(request):
     if request.method == 'POST':
         try:
-            data = json.loads(request.body)
-            iduserdata = data.pop('userDataId', None)  
 
-            # Salvando as escolhas do usuário
-            user_choices = {}  # Dicionário para armazenar as escolhas do usuário
+            data = json.loads(request.body)
+            idDinamicModel = data.pop('userDataId', None)
+            userId = CustomUser.objects.get(username=request.user).id
+
+            with connection.cursor() as cursor:
+                # Consulta para obter o nome da tabela
+                sql = """
+                    SELECT api_modelodinamico."matchingTableName"
+                    FROM api_modelodinamico 
+                    WHERE id = %s AND iduser = %s
+                """
+                cursor.execute(sql, (idDinamicModel, userId))
+
+                #print(sql)
+                matchingTableName = cursor.fetchone()[0]
+
+
+            user_choices = {}  
             for tableNameTest, fieldsData in data.items():
                 for referenceFieldTest, inputFieldTest in fieldsData.items():
-                    # Verificar se o campo está preenchido pelo usuário
-                    if inputFieldTest.strip():  # Ignora campos vazios
-                        # Verificar se já existe um registro para essa combinação de campos
+                    if inputFieldTest.strip():
                         existing_field_matching = FieldMatching.objects.filter(
                             referenceField=referenceFieldTest,
                             tableName=tableNameTest,
-                            iduserdata=iduserdata
+                            iduserdata=idDinamicModel,
+                            matchingTableName=matchingTableName
                         ).first()
-                        # Se já existir, atualize o campo
                         if existing_field_matching:
                             existing_field_matching.inputField = inputFieldTest
                             existing_field_matching.save()
                         else:
-                            # Se não existir, crie um novo registro
                             FieldMatching.objects.create(
                                 inputField=inputFieldTest,
                                 referenceField=referenceFieldTest,
                                 tableName=tableNameTest,
-                                iduserdata=iduserdata
+                                iduserdata=idDinamicModel,
+                                matchingTableName=matchingTableName
                             )
                         user_choices.setdefault(tableNameTest, {})[referenceFieldTest] = inputFieldTest
             
@@ -237,28 +250,94 @@ def autosaveForm(request):
         except Exception as e:
             return HttpResponse("Ocorreu um erro ao processar os dados: " + str(e), status=500)
 
+from rest_framework.response import Response
+
+@api_view(['POST'])
+@csrf_exempt
+def retrieveAutosavedFields(request):
+
+    data = json.loads(request.body)
+    userId = CustomUser.objects.get(username=request.user).id
+    idDinamicModel = data.pop('id', None)
+
+    with connection.cursor() as cursor:
+        sql = """
+        SELECT af."inputField", af."referenceField"
+        FROM api_fieldmatching AS af
+        WHERE iduserdata = %s
+        AND af."inputField" <> ''
+        AND af."referenceField" IS NOT NULL
+        """
+        cursor.execute(sql, (idDinamicModel,))
+        autosavedFields = cursor.fetchall()
+
+        # Recuperar o nome da tabela de matching
+        sql = """
+        SELECT DISTINCT af."matchingTableName"
+        FROM api_fieldmatching AS af
+        WHERE iduserdata = %s
+        """
+        cursor.execute(sql, (idDinamicModel,))
+        matchingTableName = cursor.fetchone()[0]
+
+        if autosavedFields:
+            conditions = ' OR '.join([f"(inputField = %s AND referenceField = %s)" for field in autosavedFields])
+            values = [(field[0], field[1]) for field in autosavedFields]
+
+            # Montando a query de atualização dinamicamente
+            sql_update = f"""
+            UPDATE {matchingTableName} 
+            SET userChoice = TRUE
+            WHERE {conditions}
+            """
+            
+            #print(sql_update)
+            cursor.execute(sql_update, [item for sublist in values for item in sublist])
+
+        transaction.commit()
+
+    # Retornando uma resposta adequada
+    return Response({"message": "Campos salvos automaticamente"})
+
+
+@api_view(['POST'])
 @csrf_exempt
 def processForm(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            iduserdata = data.pop('userDataId', None)  
+            print(data)
+            idDinamicModel = data.pop('userDataId', None)
+            userId = CustomUser.objects.get(username=request.user).id
+            #print("o userid é: ", userId)
+
+            with connection.cursor() as cursor:
+                # Consulta para obter o nome da tabela
+                sql = """
+                    SELECT api_modelodinamico."matchingTableName"
+                    FROM api_modelodinamico 
+                    WHERE id = %s AND iduser = %s
+                """
+                cursor.execute(sql, (idDinamicModel, userId))
+
+                #print(sql)
+                matchingTableName = cursor.fetchone()[0]
+
 
             for tableNameTest, fieldsData in data.items():
                 for referenceFieldTest, inputFieldTest in fieldsData.items():
-                    # Verificar se já existe um registro para essa combinação de campos
                     field_matching, created = FieldMatching.objects.get_or_create(
                         inputField=inputFieldTest,
                         referenceField=referenceFieldTest,
                         tableName=tableNameTest,
-                        iduserdata=iduserdata
+                        iduserdata=idDinamicModel,
+                        matchingTableName=matchingTableName
                     )
-                    # Se o registro já existir, atualize os campos
                     if not created:
                         field_matching.inputField = inputFieldTest
                         field_matching.save()
             
-            response = generateReport(iduserdata)
+            response = generateReport(userId)
 
             pdf_content_base64 = base64.b64encode(response.content).decode('utf-8')
 
@@ -349,7 +428,7 @@ def generateReport(iduserdata):
 @api_view(['GET'])
 @csrf_exempt 
 @permission_classes([IsAuthenticated])
-def userHistory(request):
+def unfinishedMatching(request):
     try:
         # Obtém o ID do usuário autenticado
         userId = CustomUser.objects.get(username=request.user).id
@@ -357,8 +436,21 @@ def userHistory(request):
         print("User id é:", userId)
 
         # Filtra os modelos dinâmicos associados ao ID do usuário
-        userModels = ModeloDinamico.objects.filter(iduser=userId).values()
-        
+        userModels = ModeloDinamico.objects.filter(iduser=userId, isConcluded=False).values()
+        return JsonResponse(list(userModels), safe=False)
+    except CustomUser.DoesNotExist:
+        # Se o usuário não existir, retorna uma lista vazia
+        return JsonResponse([], safe=False)
+
+@api_view(['GET'])
+@csrf_exempt 
+@permission_classes([IsAuthenticated])
+def userHistory(request):
+    try:
+        # Obtém o ID do usuário autenticado
+        userId = CustomUser.objects.get(username=request.user).id
+        # Filtra os modelos dinâmicos associados ao ID do usuário
+        userModels = ModeloDinamico.objects.filter(iduser=userId, isConcluded=True).values()
         # Retorna os modelos dinâmicos como uma resposta JSON
         return JsonResponse(list(userModels), safe=False)
     except CustomUser.DoesNotExist:
@@ -439,7 +531,7 @@ class CheckAvailabilityView(CreateAPIView):
         return Response({'emails': emails, 'usernames': usernames}, status=status.HTTP_200_OK)
     
 def minha_view(request):
-    print("Usuário autenticado:", request.user.is_authenticated)
+    #print("Usuário autenticado:", request.user.is_authenticated)
     if request.user.is_authenticated:
         # Usuário autenticado, faça o que precisar aqui
         return JsonResponse({'message': 'Usuário está logado'})

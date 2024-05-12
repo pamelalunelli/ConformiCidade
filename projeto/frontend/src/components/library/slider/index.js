@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PrimaryButton, SecondaryButton } from '../buttons';
 import { StyledSlider } from './styles';
+import { useToken } from '../../../TokenContext.js';
 
 const Slider = ({
   children,
@@ -11,11 +12,20 @@ const Slider = ({
   userDataId
 }) => {
   const [selectedList, setSelectedList] = useState([currentSlide]);
+  const { token } = useToken();
+
+  useEffect(() => {
+    handleAutosave(values);
+  }, [currentSlide, values]);
 
   const handleAutosave = async (values) => {
     try {
       const response = await fetch('/api/autosave/', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Token ${token}`
+      },
         body: JSON.stringify({ ...values, userDataId }),
       });
       if (!response.ok) {
@@ -39,11 +49,6 @@ const Slider = ({
     setCurrentSlide(previousIndex);
     await handleAutosave(values);
   };
-
-  useEffect(() => {
-    // Chama a função de autosave sempre que o slide atual mudar
-    handleAutosave(values);
-  }, [currentSlide, values]);
 
   return (
     <StyledSlider>
