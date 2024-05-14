@@ -6,6 +6,7 @@ import Loader from '../../library/loader';
 import { StyledValidationModal } from './styles';
 import { InfoCircleOutlined } from '@ant-design/icons'; // Importe o ícone necessário
 import { useToken } from '../../../TokenContext.js'; // Importe o hook useToken
+import axios from 'axios';
 
 const ValidationModal = ({
     modalIsOpen,
@@ -23,7 +24,7 @@ const ValidationModal = ({
 
     useEffect(() => {
         fetchObjetos();
-        //fetchUserChoices(); // Chame o endpoint para buscar os campos pré-preenchidos
+        fetchUserChoices();
     }, []);
 
     const fetchObjetos = async () => {
@@ -49,26 +50,27 @@ const ValidationModal = ({
         }
     };
 
-    // Função para buscar os campos pré-preenchidos
-    /*const fetchUserChoices = async () => {
+    const fetchUserChoices = async () => {
         try {
-            const response = await fetch('/api/get_user_choices/', {
-                method: 'POST',
+            const response = await axios.post('/api/get_user_choices/', {
+                matchingTableName
+            }, {
                 headers: {
                     'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ matchingTableName }),
+                    'Authorization': `Token ${token}`
+                }
             });
-            if (!response.ok) {
-                throw new Error('Erro ao buscar campos pré-preenchidos');
+            if (!response.status === 200) {
+                throw new Error('Erro ao buscar seleções prévias do usuário');
             }
-            const data = await response.json();
-            console.log('Campos pré-preenchidos:', data);
+            const data = response.data;
+            console.log('User choices:', data);
             setUserChoices(data);
         } catch (error) {
-            console.error('Erro ao buscar campos pré-preenchidos:', error);
+            console.error('Error fetching user choices:', error);
+            toast.error('Erro ao buscar seleções prévias do usuário');
         }
-    };*/
+    };
 
     const parseUserData = (fieldName) => {
         if (userData && userData.topReferencesJSON) {

@@ -16,6 +16,7 @@ const Slider = ({
 
   useEffect(() => {
     handleAutosave(values);
+    settingAutosavedFields(); // Chamada para a função de configuração de campos salvos automaticamente
   }, [currentSlide, values]);
 
   const handleAutosave = async (values) => {
@@ -33,6 +34,26 @@ const Slider = ({
       }
     } catch (error) {
       console.error('Erro ao salvar dados:', error);
+    }
+  };
+
+  const settingAutosavedFields = async () => {
+    try {
+      const response = await fetch('/api/identifying_autosaved_fields/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Token ${token}`
+        },
+        body: JSON.stringify({ userDataId }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Erro ao salvar dados.');
+      }
+    } catch (error) {
+      // Lidar com erros, se necessário
+      console.error('Erro ao executar a chamada à API:', error);
     }
   };
 

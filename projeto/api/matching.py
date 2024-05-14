@@ -234,31 +234,31 @@ def findMostProbableReferences(tableName, topN=5):
     #    e para os campos que estejam com false (usando referencefield e modelName como referencia), deve manter a ordem calculada aqui no 
     #    início desse método)
 
-@api_view(['POST'])
+api_view(['POST'])
 @csrf_exempt
 def getUserChoices(request):
     if request.method == 'POST':
-        table_name = request.data.get('tableName')
+        data = json.loads(request.body.decode('utf-8'))
+        table_name = data.get('matchingTableName')
 
         if not table_name:
-            return JsonResponse({'error': 'Parameter "tableName" is required'}, status=400)
+            return JsonResponse({'error': 'Parameter "matchingTableName" is required'}, status=400)
 
         with connection.cursor() as cursor:
             query = f"""
-                SELECT inputfield, referencefield
-                FROM {table_name}
-                WHERE userchoice = True
+            SELECT modelname, referencefield, inputfield
+            FROM {table_name}
+            WHERE userchoice = True
             """
             cursor.execute(query)
             data = cursor.fetchall()
             userChoices = {}
             for row in data:
-                input_field, reference_field = row
-                if reference_field not in userChoices:
-                    userChoices[reference_field] = []
-                userChoices[reference_field].append(input_field)
-        
-        return JsonResponse(userChoices, safe=False)
+                model_name, reference_field, input_field = row
+                if model_name not in userChoices:
+                    userChoices[model_name] = []
+                userChoices[model_name].append({'reference_field': reference_field, 'input_field': input_field})
 
+        return JsonResponse(userChoices, safe=False)
     else:
         return JsonResponse({'error': 'Only POST requests are allowed'}, status=405)
