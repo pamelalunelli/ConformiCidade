@@ -34,6 +34,7 @@ const HomePageContainer = () => {
   const [csrfToken, setCsrfToken] = useState('');
   const [userDataId, setUserDataId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false); // State for spinner visibility
+  const [matchingTableName, setMatchingTableName] = useState(''); // State to store matchingTableName
 
   useEffect(() => {
     const csrftoken = getCookie('csrftoken');
@@ -80,6 +81,7 @@ const HomePageContainer = () => {
           );
 
           setUserData(userDataResponse.data);
+          setMatchingTableName(matchingTableName.data); // Set matchingTableName state
           openModal();
           resetForm();
         } catch (userDataError) {
@@ -157,7 +159,13 @@ const HomePageContainer = () => {
       <StyledHomePageContainer>
         <MatchingsNotConcluded />
       </StyledHomePageContainer>
-      <ValidationModal modalIsOpen={modalIsOpen} closeModal={closeModal} userData={userData} userDataId={userDataId} /> {/* Pass userDataId to ValidationModal */}
+      <ValidationModal
+        modalIsOpen={modalIsOpen}
+        closeModal={closeModal}
+        userData={userData}
+        userDataId={userDataId}
+        matchingTableName={matchingTableName} // Pass matchingTableName to ValidationModal
+      />
     </>
   );
 };

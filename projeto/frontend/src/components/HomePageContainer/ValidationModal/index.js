@@ -11,16 +11,19 @@ const ValidationModal = ({
     modalIsOpen,
     closeModal,
     userData,
-    userDataId 
+    userDataId,
+    matchingTableName 
 }) => {
     const { token } = useToken();
     const [defaultList, setDefaultList] = useState([]);
     const [isFetching, setIsFetching] = useState(true);
     const [currentSlide, setCurrentSlide] = useState(0);
     const [selectedField, setSelectedField] = useState(null);
+    const [userChoices, setUserChoices] = useState({}); // Estado para armazenar os campos pré-preenchidos
 
     useEffect(() => {
         fetchObjetos();
+        //fetchUserChoices(); // Chame o endpoint para buscar os campos pré-preenchidos
     }, []);
 
     const fetchObjetos = async () => {
@@ -45,6 +48,27 @@ const ValidationModal = ({
             setIsFetching(false);
         }
     };
+
+    // Função para buscar os campos pré-preenchidos
+    /*const fetchUserChoices = async () => {
+        try {
+            const response = await fetch('/api/get_user_choices/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ matchingTableName }),
+            });
+            if (!response.ok) {
+                throw new Error('Erro ao buscar campos pré-preenchidos');
+            }
+            const data = await response.json();
+            console.log('Campos pré-preenchidos:', data);
+            setUserChoices(data);
+        } catch (error) {
+            console.error('Erro ao buscar campos pré-preenchidos:', error);
+        }
+    };*/
 
     const parseUserData = (fieldName) => {
         if (userData && userData.topReferencesJSON) {

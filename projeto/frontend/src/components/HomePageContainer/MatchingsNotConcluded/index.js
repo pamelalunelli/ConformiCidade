@@ -119,7 +119,7 @@ const MatchingsNotConcluded = () => {
                             modalIsOpen={modalIsOpen}
                             closeModal={closeModal}
                             userData={userData}
-                            userDataId={iduser}
+                            userDataId={id}
                             matchingTableName={matchingTableName}
                         />
                     )}

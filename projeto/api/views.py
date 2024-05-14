@@ -250,11 +250,9 @@ def autosaveForm(request):
         except Exception as e:
             return HttpResponse("Ocorreu um erro ao processar os dados: " + str(e), status=500)
 
-from rest_framework.response import Response
-
 @api_view(['POST'])
 @csrf_exempt
-def retrieveAutosavedFields(request):
+def identifyingAutosavedFields(request):
 
     data = json.loads(request.body)
     userId = CustomUser.objects.get(username=request.user).id
@@ -271,7 +269,6 @@ def retrieveAutosavedFields(request):
         cursor.execute(sql, (idDinamicModel,))
         autosavedFields = cursor.fetchall()
 
-        # Recuperar o nome da tabela de matching
         sql = """
         SELECT DISTINCT af."matchingTableName"
         FROM api_fieldmatching AS af
@@ -284,21 +281,17 @@ def retrieveAutosavedFields(request):
             conditions = ' OR '.join([f"(inputField = %s AND referenceField = %s)" for field in autosavedFields])
             values = [(field[0], field[1]) for field in autosavedFields]
 
-            # Montando a query de atualização dinamicamente
             sql_update = f"""
             UPDATE {matchingTableName} 
             SET userChoice = TRUE
             WHERE {conditions}
             """
             
-            #print(sql_update)
             cursor.execute(sql_update, [item for sublist in values for item in sublist])
 
         transaction.commit()
 
-    # Retornando uma resposta adequada
     return Response({"message": "Campos salvos automaticamente"})
-
 
 @api_view(['POST'])
 @csrf_exempt
@@ -306,7 +299,6 @@ def processForm(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            print(data)
             idDinamicModel = data.pop('userDataId', None)
             userId = CustomUser.objects.get(username=request.user).id
             #print("o userid é: ", userId)
@@ -337,7 +329,7 @@ def processForm(request):
                         field_matching.inputField = inputFieldTest
                         field_matching.save()
             
-            response = generateReport(userId)
+            response = generateReport(idDinamicModel)
 
             pdf_content_base64 = base64.b64encode(response.content).decode('utf-8')
 
