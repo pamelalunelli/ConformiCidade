@@ -5,6 +5,8 @@ from django.http import HttpResponse, JsonResponse
 import textdistance as td
 import pandas as pd
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import api_view, permission_classes
+from django.utils.decorators import method_decorator
 
 @csrf_exempt
 def createMatchingTable(request):
@@ -26,7 +28,7 @@ def createMatchingTable(request):
                     iduserdata integer,
                     inputField VARCHAR(255),
                     referenceField VARCHAR(255),
-                    tableName VARCHAR(255),
+                    modelName VARCHAR(255),
                     --editBased_hamming FLOAT DEFAULT 0.0,
                     --editBased_mlipns FLOAT DEFAULT 0.0,
                     editBased_levenshtein FLOAT DEFAULT 0.0,
@@ -62,7 +64,8 @@ def createMatchingTable(request):
                     --simple_identity FLOAT DEFAULT 0.0,
                     --simple_matrix FLOAT DEFAULT 0.0,
                     generalindex FLOAT DEFAULT 0.0,
-                    userChoice BOOLEAN DEFAULT FALSE
+                    userChoice BOOLEAN DEFAULT FALSE,
+                    tableName VARCHAR(255)
                 )
                 """
                 cursor.execute(createTableQuery)
@@ -82,18 +85,19 @@ def populateMatchingFields(request):
             fieldsCSV = request_data.get('fieldsCSV', [])
             userDataId = request_data.get('userDataId', None)
 
-            referenceFields = getReferenceFields()
+            referenceFieldsByModel = getReferenceFieldsByModel()
 
             with connection.cursor() as cursor:
                 for inputField in fieldsCSV:
-                    for referenceField in referenceFields:
-                        try:
-                            cursor.execute(f"""
-                                INSERT INTO {matchingTableName} (iduserdata, inputField, referenceField, tableName)
-                                VALUES (%s, %s, %s, %s)
-                            """, [userDataId, inputField, referenceField, matchingTableName])
-                        except Exception as e:
-                            return JsonResponse({'error': str(e)}, status=500)
+                    for model, referenceFields in referenceFieldsByModel.items():
+                        for referenceField in referenceFields:
+                            try:
+                                cursor.execute(f"""
+                                    INSERT INTO {matchingTableName} (iduserdata, inputField, referenceField, modelName, tableName)
+                                    VALUES (%s, %s, %s, %s, %s)
+                                """, [userDataId, inputField, referenceField, model, matchingTableName])
+                            except Exception as e:
+                                return JsonResponse({'error': str(e)}, status=500)
             
             calculatingSimilarity(matchingTableName)
             topReferencesJSON = findMostProbableReferences(matchingTableName)
@@ -109,15 +113,15 @@ def populateMatchingFields(request):
         return JsonResponse({'error': 'Method Not Allowed'}, status=405)
 
 @csrf_exempt
-def getReferenceFields():
-    referenceFields = []
+def getReferenceFieldsByModel():
+    referenceFieldsByModel = {}
 
-    app_models = apps.get_app_config('api').get_models()
-    for model in app_models:
+    appModels = apps.get_app_config('api').get_models()
+    for model in appModels:
         fields = [field.name for field in model._meta.get_fields() if field.concrete]
-        referenceFields.extend(fields)
+        referenceFieldsByModel[model.__name__] = fields
 
-    return referenceFields
+    return referenceFieldsByModel
 
 @csrf_exempt
 def calculatingSimilarity(tableName):
@@ -185,6 +189,22 @@ def calculatingSimilarity(tableName):
 
         connection.commit()
 
+api_view(['POST'])
+@csrf_exempt
+def retrievingMatchingFields(request):
+    if request.method == 'POST':
+
+        request_data = json.loads(request.body)
+        matchingTableName = request_data.get('matchingTableName', '')
+
+        try:
+            topReferencesJSON = findMostProbableReferences(matchingTableName)
+            return JsonResponse({'topReferencesJSON': topReferencesJSON})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Method Not Allowed'}, status=405)
+
 @csrf_exempt
 def findMostProbableReferences(tableName, topN=5):
     with connection.cursor() as cursor:
@@ -207,3 +227,38 @@ def findMostProbableReferences(tableName, topN=5):
         mostProbableReferences[referencefield] = combinedReferences
 
     return json.dumps(mostProbableReferences, indent=4)
+
+    #if tiver pelo menos um campo userChoice verdadeiro:
+    #    lógica para o front pegar essas opções que o usuário já escolheu (inputField) e colocar como valor pré-selecionado no select (usando referencefield
+    #     e modelName como referencia)
+    #    e para os campos que estejam com false (usando referencefield e modelName como referencia), deve manter a ordem calculada aqui no 
+    #    início desse método)
+
+@api_view(['POST'])
+@csrf_exempt
+def getUserChoices(request):
+    if request.method == 'POST':
+        table_name = request.data.get('tableName')
+
+        if not table_name:
+            return JsonResponse({'error': 'Parameter "tableName" is required'}, status=400)
+
+        with connection.cursor() as cursor:
+            query = f"""
+                SELECT inputfield, referencefield
+                FROM {table_name}
+                WHERE userchoice = True
+            """
+            cursor.execute(query)
+            data = cursor.fetchall()
+            userChoices = {}
+            for row in data:
+                input_field, reference_field = row
+                if reference_field not in userChoices:
+                    userChoices[reference_field] = []
+                userChoices[reference_field].append(input_field)
+        
+        return JsonResponse(userChoices, safe=False)
+
+    else:
+        return JsonResponse({'error': 'Only POST requests are allowed'}, status=405)
