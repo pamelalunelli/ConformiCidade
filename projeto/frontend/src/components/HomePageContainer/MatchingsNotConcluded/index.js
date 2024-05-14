@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import Loader from '../../library/loader/index.js';
 import { useToken } from '../../../TokenContext.js';
+import { StyledMatchingsNotConcludedTable } from './styles.js';
 
 const MatchingsNotConcluded = () => {
     const { token } = useToken();
@@ -34,7 +35,7 @@ const MatchingsNotConcluded = () => {
 
     const handleRowClick = async (iduser, id) => {
         try {
-            const response = await fetch('/api/retrieve_autosaved_fields/', {
+            const response = await fetch('/api/identifying_autosaved_fields/', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Token ${token}`,
@@ -60,7 +61,7 @@ const MatchingsNotConcluded = () => {
             {isFetching ? (
                 <Loader />
             ) : (
-                <table>
+                <StyledMatchingsNotConcludedTable> {/* Aplica os estilos à tabela */}
                     <thead>
                         <tr>
                             <th>Nome do Arquivo</th>
@@ -77,7 +78,7 @@ const MatchingsNotConcluded = () => {
                             </tr>
                         ))}
                     </tbody>
-                </table>
+                </StyledMatchingsNotConcludedTable>
             )}
         </div>
     );
