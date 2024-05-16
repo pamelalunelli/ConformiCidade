@@ -1,3 +1,4 @@
+from io import BytesIO
 import json
 import os
 import time
@@ -25,10 +26,11 @@ from reportlab.lib.pagesizes import letter
 import base64
 from django.template.loader import render_to_string
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.platypus import  SimpleDocTemplate, Paragraph, Table, TableStyle, Image, Spacer
 import re
 from api.models import CustomUser
 from django.core.files.base import ContentFile
+from reportlab.lib.utils import ImageReader
 
 CustomUser = get_user_model()
 
@@ -331,13 +333,22 @@ def processForm(request):
 
             pdf_name = f'{matchingTableName}.pdf'
             model = ModeloDinamico.objects.get(iduser=userId, id=idDinamicModel)
-            
-            model.pdfFile.save(pdf_name, ContentFile(pdf_content_base64), save=True)
+            model.pdfFile.save(pdf_name, ContentFile(response.content), save=True)
 
             return HttpResponse(render_to_string('open_pdf_window.html', {'pdf_content_base64': pdf_content_base64}), status=200)
 
         except Exception as e:
             return HttpResponse("Ocorreu um erro ao processar os dados: " + str(e), status=500)
+
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.units import inch
+from reportlab.lib.styles import getSampleStyleSheet
+from django.http import HttpResponse
+from io import BytesIO
+import os
 
 def generateReport(iduserdata):
     response = HttpResponse(content_type='application/pdf')
@@ -359,21 +370,47 @@ def generateReport(iduserdata):
         else:
             tableConformity[fieldMatching.tableName]['nonconform'] += 1
 
-    buffer = response
+    buffer = BytesIO()
 
     doc = SimpleDocTemplate(buffer, pagesize=letter)
     elements = []
-    
+
     # Definindo estilos
     sampleStyles = getSampleStyleSheet()
-    boldStyle = ParagraphStyle(name='Bold', parent=sampleStyles["Normal"])
-    boldStyle.fontName = 'Helvetica-Bold'
-    sampleStyles.add(boldStyle)
+    sampleStyles.add(ParagraphStyle(name='Bold', parent=sampleStyles["Normal"], fontName='Helvetica-Bold'))
 
-    # Adicionando títulos
-    elements.append(Paragraph("Relatório de Conformidade", sampleStyles["Title"]))
-    elements.append(Paragraph("Comparação entre Modelo de", sampleStyles["Heading3"]))
-    elements.append(Paragraph("Referência e Arquivo de entrada", sampleStyles["Heading3"]))
+    # Estilo para o cabeçalho com o matchingTableName
+    header_style = ParagraphStyle(name='Header', parent=sampleStyles["Normal"])
+    header_style.fontSize = 8
+
+    # Obtendo o matchingTableName do primeiro FieldMatching
+    matchingTableName = fieldMatchings.first().matchingTableName
+
+    elements.append(Paragraph(matchingTableName, header_style))
+    elements.append(Spacer(1, 12))  # Espaço entre o cabeçalho e o conteúdo
+
+    # Adicionando o logo
+    logo_path = os.path.join('frontend', 'static', 'images', 'logoSemFundo.png')
+    if os.path.exists(logo_path):
+        logo = Image(logo_path, width=100, height=50)
+        elements.append(logo)
+
+    # Adicionando os títulos com estilos personalizados
+    title_style = ParagraphStyle(name='Title', parent=sampleStyles["Title"])
+    title_style.fontSize = 16
+    title_style.textColor = colors.black
+    title_style.alignment = 1  # centralizar o texto
+    title_style.fontName = 'Helvetica'
+    title_style.wordWrap = 'LTR'  # alinhar texto à esquerda
+    elements.append(Paragraph("Relatório de Conformidade", title_style))
+
+    heading3_style = ParagraphStyle(name='Heading3', parent=sampleStyles["Heading3"])
+    heading3_style.fontSize = 14
+    heading3_style.textColor = colors.grey
+    heading3_style.alignment = 1  # centralizar o texto
+    heading3_style.fontName = 'Helvetica'
+    heading3_style.wordWrap = 'LTR'  # alinhar texto à esquerda
+    elements.append(Paragraph("Comparação entre Modelo de Referência e Arquivo de Entrada", heading3_style))
 
     for tableName, matches in tableData.items():
         elements.append(Paragraph(f'<b>{tableName}</b>', sampleStyles["Heading2"]))
@@ -472,7 +509,6 @@ def userHistory(request):
         # Se o usuário não existir, retorna uma lista vazia
         return JsonResponse([], safe=False)
 
-
 @api_view(['GET'])
 def downloadPdf(request, pdf_id):
     try:
@@ -481,11 +517,19 @@ def downloadPdf(request, pdf_id):
 
         # Nome completo do arquivo
         file_name = os.path.basename(model.pdfFile.path)
+        print("nome do arquivo", file_name)
+        
+        # Parte inicial do caminho absoluto
+        caminho_base = 'C:/TCC/projeto-final-DSW/projeto/media/'
 
+        # Concatenar parte inicial do caminho com o caminho do banco de dados
+        caminho_absoluto = os.path.join(caminho_base, model.pdfFile.path)
+        
         # Abra o arquivo PDF e leia o conteúdo
-        with open(model.pdfFile.path, 'rb') as pdf_file:
+        with open(caminho_absoluto, 'rb') as pdf_file:
             response = HttpResponse(pdf_file.read(), content_type='application/pdf')
             response['Content-Disposition'] = f'attachment; filename="{file_name}"'
+            print(len(response.content))
             return response
     except FileNotFoundError:
         return HttpResponse("Arquivo não encontrado", status=404)

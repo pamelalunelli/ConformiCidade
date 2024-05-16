@@ -96,6 +96,7 @@ class ModeloDinamico(models.Model):
     dataJSON = models.TextField()
     matchingTableName = models.CharField(max_length=255, null=True)
     isConcluded = models.BooleanField(default=False)
+    pdfFile = models.FileField(upload_to='pdfs/', null=True)
 
 '''class AdminUser(models.Model):
     id = models.AutoField(primary_key=True)
