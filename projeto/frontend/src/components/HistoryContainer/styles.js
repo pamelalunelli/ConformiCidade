@@ -93,10 +93,19 @@ StyledHistoryContainer.RemoveButton = styled(SecondaryButton).attrs({size: 'SMAL
         border-color: #AB0000;
     }
 `
-
 StyledHistoryContainer.RenameInput = styled(Input)`
     @media ${device.laptopL} {
         width: 100%;
+    }
+`
+
+StyledHistoryContainer.DownloadButton = styled(SecondaryButton).attrs({ size: 'SMALL' })`
+    color: #4CAF50;
+    border-color: #4CAF50;
+
+    &:hover:not(:disabled) {
+        color: #388E3C;
+        border-color: #388E3C;
     }
 `
 

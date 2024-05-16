@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 
-import { Pen, TrashAlt } from '../library/icons'
+import { Pen, TrashAlt, Download } from '../library/icons'
 import Modal from '../library/modals'
 import { PrimaryButton, SecondaryButton } from '../library/buttons'
 import Loader from '../library/loader'
@@ -78,15 +78,40 @@ const HistoryContainer = ({
             body: JSON.stringify({ nome: newName }),
         })
         .then(response => response.json())
-      .then(data => {
-        toast.success('Arquivo renomeado com sucesso')
-        setEditingNameId(null)
-        fetchObjetos()
-      })
-      .catch(error => {
-        toast.error('Erro ao editar')
-      })
-  }
+        .then(data => {
+            toast.success('Arquivo renomeado com sucesso')
+            setEditingNameId(null)
+            fetchObjetos()
+        })
+        .catch(error => {
+            toast.error('Erro ao editar')
+        })
+    }
+
+    const handleDownload = (id) => {
+        fetch(`/api/download_pdf/${id}/`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Token ${token}`
+            }
+        }).then(response => {
+            if (response.ok) {
+                response.blob().then(blob => {
+                    const url = window.URL.createObjectURL(new Blob([blob]));
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.setAttribute('download', `file.pdf`);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                });
+            } else {
+                toast.error('Erro ao fazer o download do PDF');
+            }
+        }).catch(error => {
+            toast.error('Erro ao fazer o download do PDF:', error);
+        });
+    }
 
     return (
         <>
@@ -141,6 +166,9 @@ const HistoryContainer = ({
                                                 <StyledHistoryContainer.RemoveButton onClick={() => openModal(item)}>
                                                     <TrashAlt/> <span>Excluir</span>
                                                 </StyledHistoryContainer.RemoveButton>
+                                                <StyledHistoryContainer.DownloadButton onClick={() => handleDownload(item.id)}>
+                                                    <Download /> <span>Baixar</span>
+                                                </StyledHistoryContainer.DownloadButton>
                                             </StyledHistoryContainer.Actions>
                                         </td>
                                     </tr>

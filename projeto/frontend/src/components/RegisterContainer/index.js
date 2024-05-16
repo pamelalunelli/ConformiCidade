@@ -4,13 +4,12 @@ import { toast } from 'react-toastify'
 import * as Yup from 'yup'
 import axios from 'axios'
 import { useHistory } from 'react-router-dom'
-
 import { usePaths } from '../Utils/utils'
 import { Eye, EyeSlash, AngleLeft } from '../library/icons'
 import { Field } from '../library/inputs'
 import { NoBgButton } from '../library/buttons'
-
 import { StyledRegisterContainer } from './styles'
+import Logo from '../../../static/images/logoSemFundo.png'; // Importe sua logo
 
 const RegisterContainer = () => {
     const paths = usePaths()
@@ -66,6 +65,9 @@ const RegisterContainer = () => {
         <StyledRegisterContainer>
             <StyledRegisterContainer.Container>
                 <StyledRegisterContainer.Back to={paths.login()}><AngleLeft/> Voltar para o login</StyledRegisterContainer.Back>
+                <div style={{ textAlign: 'center', marginTop: '20px', marginBottom: '20px' }}>
+                <img src={Logo} alt="Logo" style={{ width: '300px', height: 'auto' }} />
+                </div>
                 <StyledRegisterContainer.Title>Crie sua conta</StyledRegisterContainer.Title>
                 <Formik
                     initialValues={{ username: '', email: '', password: '' }}
@@ -102,7 +104,7 @@ const RegisterContainer = () => {
                 </Formik>
             </StyledRegisterContainer.Container>
         </StyledRegisterContainer>
-    )
-}
+    );
+};
 
-export default RegisterContainer
+export default RegisterContainer;

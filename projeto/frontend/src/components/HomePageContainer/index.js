@@ -72,13 +72,13 @@ const HomePageContainer = () => {
           const matchingTableName = await axios.post(
             `/api/create_matching_table/`,
             tableNameCSV,
-            { headers: { 'Content-Type': 'application/json' } }
+            { headers: { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` } } // Adicione o token aqui também
           );
 
           const userDataResponse = await axios.post(
             `/api/populate_matching_fields/`,
             { matchingTableName, fieldsCSV, userDataId },
-            { headers: { 'Content-Type': 'application/json' } }
+            { headers: { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` } } // E aqui
           );
 
           setUserData(userDataResponse.data);
@@ -170,7 +170,7 @@ const HomePageContainer = () => {
         closeModal={closeModal}
         userData={userData}
         userDataId={userDataId}
-        matchingTableName={matchingTableName} // Pass matchingTableName to ValidationModal
+        matchingTableName={matchingTableName}
       />
     </>
   );

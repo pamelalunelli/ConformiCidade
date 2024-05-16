@@ -54,20 +54,21 @@ const MatchingsNotConcluded = () => {
             const savedUserDataResponse = await axios.post(
                 `/api/retrieving_matching_fields/`,
                 { matchingTableName: clickedMatchingTableName },
-                { headers: { 'Content-Type': 'application/json' } }
+                { 
+                    headers: { 
+                        'Authorization': `Token ${token}`, // Adicionando o token aqui
+                        'Content-Type': 'application/json' 
+                    } 
+                }
             );
             
             setUserData(savedUserDataResponse.data);
             openModal();
 
-            if (!savedUserDataResponse.ok) {
-                //throw new Error(`Erro ao buscar objetos: ${savedUserDataResponse.statusText}`);
-            }
-            
             const autosavedFieldsResponse = await fetch('/api/identifying_autosaved_fields/', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Token ${token}`,
+                    'Authorization': `Token ${token}`, // Adicionando o token aqui
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({

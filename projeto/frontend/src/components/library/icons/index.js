@@ -1,6 +1,8 @@
 import React from 'react'
 import styled from 'styled-components'
 import * as Unicons from '@iconscout/react-unicons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faDownload } from '@fortawesome/free-solid-svg-icons'
 
 export const Icon = styled.i.attrs({'aria-hidden': true})`
     display: inline-block;
@@ -34,3 +36,5 @@ export const AngleLeft = wrapIcon(Unicons.UilAngleLeft)
 export const Pen = wrapIcon(Unicons.UilPen)
 export const TrashAlt = wrapIcon(Unicons.UilTrashAlt)
 export const Bars = wrapIcon(Unicons.UilBars)
+
+export const Download = wrapIcon(() => <FontAwesomeIcon icon={faDownload} />)

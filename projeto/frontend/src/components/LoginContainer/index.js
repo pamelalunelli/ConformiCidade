@@ -10,7 +10,7 @@ import { useUser } from '../Utils/user-utils';
 import { Eye, EyeSlash } from '../library/icons';
 import { Field } from '../library/inputs';
 import { useToken } from '../../TokenContext'; // Importe o hook useToken
-
+import Logo from '../../../static/images/logoSemFundo.png'; // Importe sua logo
 
 const schema = Yup.object().shape({
     username: Yup.string().required('Campo obrigatório'),
@@ -29,6 +29,8 @@ const LoginContainer = () => {
     const isMounted = useRef(true);
     const [showPassword, setShowPassword] = useState(false);
     const [csrfToken, setCsrfToken] = useState(''); // Definindo csrfToken aqui
+    const [isValid, setIsValid] = useState(false);
+    const [isDirty, setIsDirty] = useState(false);
 
     useEffect(() => {
         // Obter o token CSRF do cookie e definir no estado
@@ -70,43 +72,60 @@ const LoginContainer = () => {
         return cookieValue ? cookieValue.pop() : '';
     };
 
+    useEffect(() => {
+        setIsValid(schema.isValidSync({ username: '', password: '' }));
+        setIsDirty(false);
+    }, []);
+
     return (
         <StyledLoginContainer>
             <StyledLoginContainer.Container>
+            <div style={{ textAlign: 'center', marginTop: '20px', marginBottom: '20px' }}>
+                <img src={Logo} alt="Logo" style={{ width: '300px', height: 'auto' }} />
+                </div>
                 <Formik
                     initialValues={{ username: '', password: '' }}
                     validationSchema={schema}
                     onSubmit={handleSubmit}>
-                    {({ errors, isSubmitting, isValid, dirty }) => (
-                        <StyledLoginContainer.Form>
-                            <Field
-                                type='text'
-                                name='username'
-                                id='username-id'
-                                label='Usuário'
-                                error={errors.username}
-                                placeholder='Digite seu usuário...'
-                                autoComplete='on'
-                            />
-                            <Field
-                                type={showPassword ? 'text' : 'password'}
-                                name='password'
-                                id='password-id'
-                                label='Senha'
-                                autoComplete='current-password'
-                                after={
-                                    <NoBgButton size='SMALL' onClick={() => setShowPassword(!showPassword)}>
-                                        {showPassword ? <EyeSlash /> : <Eye />}
-                                    </NoBgButton>
-                                }
-                                placeholder='Digite sua senha...'
-                                error={errors.password}
-                            />
-                            <StyledLoginContainer.Submit type='submit' disabled={!isValid || isSubmitting || !dirty}>
-                                Entrar
-                            </StyledLoginContainer.Submit>
-                        </StyledLoginContainer.Form>
-                    )}
+                    {({ errors, isSubmitting, values, handleChange }) => {
+                        useEffect(() => {
+                            setIsValid(schema.isValidSync(values));
+                            setIsDirty(Object.values(values).some(Boolean));
+                        }, [values]);
+
+                        return (
+                            <StyledLoginContainer.Form>
+                                <Field
+                                    type='text'
+                                    name='username'
+                                    id='username-id'
+                                    label='Usuário'
+                                    error={errors.username}
+                                    placeholder='Digite seu usuário...'
+                                    autoComplete='on'
+                                    onChange={handleChange}
+                                />
+                                <Field
+                                    type={showPassword ? 'text' : 'password'}
+                                    name='password'
+                                    id='password-id'
+                                    label='Senha'
+                                    autoComplete='current-password'
+                                    after={
+                                        <NoBgButton size='SMALL' onClick={() => setShowPassword(!showPassword)}>
+                                            {showPassword ? <EyeSlash /> : <Eye />}
+                                        </NoBgButton>
+                                    }
+                                    placeholder='Digite sua senha...'
+                                    error={errors.password}
+                                    onChange={handleChange}
+                                />
+                                <StyledLoginContainer.Submit type='submit' disabled={!isValid || isSubmitting || !isDirty}>
+                                    Entrar
+                                </StyledLoginContainer.Submit>
+                            </StyledLoginContainer.Form>
+                        );
+                    }}
                 </Formik>
                 <StyledLoginContainer.RegisterMessage>
                     Não tem conta? <Link to={paths.signup()}>Criar conta</Link>
