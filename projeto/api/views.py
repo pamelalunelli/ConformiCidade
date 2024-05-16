@@ -1,4 +1,5 @@
 import json
+import os
 import time
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -27,6 +28,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 import re
 from api.models import CustomUser
+from django.core.files.base import ContentFile
 
 CustomUser = get_user_model()
 
@@ -179,22 +181,17 @@ def userData(request, id):
 def defaultDataTable(request):
 
     excludedTables = ['FieldMatching', 'ModeloDinamico', 'CustomUser', 'AdminUser']
-
     models = apps.get_app_config('api').get_models()
-    
     tables = []
-
     for model in models:
         if model._meta.app_label == 'api' and not model._meta.abstract and model._meta.object_name not in excludedTables:
             modelName = model._meta.object_name
-            fields = [field.name for field in model._meta.get_fields() if field.concrete]
-
+            fields = [field.name for field in model._meta.get_fields() if field.concrete and field.name != 'id']
             table = {
                 'name': modelName,
                 'fields': fields,
             }
             tables.append(table)
-
     return JsonResponse(tables, safe=False)
 
 @api_view(['POST'])
@@ -256,7 +253,7 @@ def identifyingAutosavedFields(request):
 
     data = json.loads(request.body)
     userId = CustomUser.objects.get(username=request.user).id
-    idDinamicModel = data.pop('id', None)
+    idDinamicModel = data.pop('userDataId', None)
 
     with connection.cursor() as cursor:
         sql = """
@@ -330,8 +327,12 @@ def processForm(request):
                         field_matching.save()
             
             response = generateReport(idDinamicModel)
-
             pdf_content_base64 = base64.b64encode(response.content).decode('utf-8')
+
+            pdf_name = f'{matchingTableName}.pdf'
+            model = ModeloDinamico.objects.get(iduser=userId, id=idDinamicModel)
+            
+            model.pdfFile.save(pdf_name, ContentFile(pdf_content_base64), save=True)
 
             return HttpResponse(render_to_string('open_pdf_window.html', {'pdf_content_base64': pdf_content_base64}), status=200)
 
@@ -434,6 +435,28 @@ def unfinishedMatching(request):
         # Se o usuário não existir, retorna uma lista vazia
         return JsonResponse([], safe=False)
 
+@api_view(['POST'])
+@csrf_exempt 
+def isConcluded(request):
+    if request.method == 'POST':
+        # Obtém os dados do corpo da requisição no formato JSON
+        data = request.data
+        userDataId = data.get('userDataId')
+        isConcluded = data.get('isConcluded')
+        
+        try:
+            modelo_dinamico = ModeloDinamico.objects.get(id=userDataId)
+            modelo_dinamico.isConcluded = isConcluded
+            modelo_dinamico.save()
+            
+            return JsonResponse({'message': 'Dados atualizados com sucesso'}, status=200)
+        except ModeloDinamico.DoesNotExist:
+            return JsonResponse({'error': 'Objeto não encontrado'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Método não permitido'}, status=405)
+
 @api_view(['GET'])
 @csrf_exempt 
 @permission_classes([IsAuthenticated])
@@ -448,6 +471,24 @@ def userHistory(request):
     except CustomUser.DoesNotExist:
         # Se o usuário não existir, retorna uma lista vazia
         return JsonResponse([], safe=False)
+
+
+@api_view(['GET'])
+def downloadPdf(request, pdf_id):
+    try:
+        # Recupere o objeto ModeloDinamico pelo ID
+        model = get_object_or_404(ModeloDinamico, id=pdf_id)
+
+        # Nome completo do arquivo
+        file_name = os.path.basename(model.pdfFile.path)
+
+        # Abra o arquivo PDF e leia o conteúdo
+        with open(model.pdfFile.path, 'rb') as pdf_file:
+            response = HttpResponse(pdf_file.read(), content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="{file_name}"'
+            return response
+    except FileNotFoundError:
+        return HttpResponse("Arquivo não encontrado", status=404)
 
 @csrf_exempt 
 @require_http_methods(["DELETE"])

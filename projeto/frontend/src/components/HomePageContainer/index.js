@@ -10,6 +10,7 @@ import ValidationModal from './ValidationModal';
 import ClipLoader from "react-spinners/ClipLoader";
 import { StyledHomePageContainer } from './styles';
 import ERDiagram from '../../../static/images/ERDiagram.jpg';
+import Logo from '../../../static/images/logoSemFundo.png'
 import { useToken } from '../../TokenContext.js'; // Importe o hook useToken
 
 const fileSchema = (required) => {
@@ -96,68 +97,73 @@ const HomePageContainer = () => {
       setIsSubmitting(false);
     }
   };
-
+  
   return (
     <>
-      <div>
-        <StyledHomePageContainer.Title>Validador de Dados Cadastrais</StyledHomePageContainer.Title>
-        <StyledHomePageContainer.Paragraph>
-          Este validador tem como objetivo auxiliar o mapeamento das entidades presentes nos Cadastros Imobiliários Fiscais dos municípios tendo como base um modelo concebido a partir do segmento fiscal do modelo proposto por Santos (2022), tese de doutorado que teve como objeto de estudo os Direitos, Restrições e Responsabilidades (RRR) sob o aspecto técnico da ISO 19.152:2012 (Land Administration Domain Model).
-        </StyledHomePageContainer.Paragraph>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '10vh' }}>
+        <img src={Logo} alt="Logo" style={{ height: '100px' }} />
       </div>
-      <StyledHomePageContainer.Reference>
+      <StyledHomePageContainer>
         <div>
-          <StyledHomePageContainer.Reference.Title>
-            Arquivo de Entrada
-          </StyledHomePageContainer.Reference.Title>
+          <StyledHomePageContainer.Title>Validador de Dados Cadastrais</StyledHomePageContainer.Title>
           <StyledHomePageContainer.Paragraph>
-            O arquivo a ser carregado deve ser um comma-separated value (*.csv) ou de texto (*.txt) e deve conter, obrigatoriamente, em sua primeira linha, os nomes dos campos a serem mapeados no processo. O arquivo pode ou não conter dados.
+            Este validador tem como objetivo auxiliar o mapeamento das entidades presentes nos Cadastros Imobiliários Fiscais dos municípios tendo como base um modelo concebido a partir do segmento fiscal do modelo proposto por Santos (2022), tese de doutorado que teve como objeto de estudo os Direitos, Restrições e Responsabilidades (RRR) sob o aspecto técnico da ISO 19.152:2012 (Land Administration Domain Model).
           </StyledHomePageContainer.Paragraph>
         </div>
-        <StyledHomePageContainer>
-          <div style={{ textAlign: 'center' }}>
-            <a href={ERDiagram} target="_blank" rel="noopener noreferrer">
-              <img src={ERDiagram} alt="Diagrama Entidade-Relacionamento" height="200" />
-            </a>
+        <StyledHomePageContainer.Reference>
+          <div>
+            <StyledHomePageContainer.Reference.Title>
+              Arquivo de Entrada
+            </StyledHomePageContainer.Reference.Title>
             <StyledHomePageContainer.Paragraph>
-              Clique na imagem para <br /> ampliar o diagrama
+              O arquivo a ser carregado deve ser um comma-separated value (*.csv) ou de texto (*.txt) e deve conter, obrigatoriamente, em sua primeira linha, os nomes dos campos a serem mapeados no processo. O arquivo pode ou não conter dados.
             </StyledHomePageContainer.Paragraph>
           </div>
+          <StyledHomePageContainer>
+            <div style={{ textAlign: 'center' }}>
+              <a href={ERDiagram} target="_blank" rel="noopener noreferrer">
+                <img src={ERDiagram} alt="Diagrama Entidade-Relacionamento" height="200" />
+              </a>
+              <StyledHomePageContainer.Paragraph>
+                Clique na imagem para <br /> ampliar o diagrama
+              </StyledHomePageContainer.Paragraph>
+            </div>
+          </StyledHomePageContainer>
+        </StyledHomePageContainer.Reference>
+        <Formik initialValues={{fileName: '', csv_arq: null}}
+                validationSchema={schema}
+                onSubmit={handleSubmit}>
+          {({erros, isValid, dirty, setFieldValue}) => (
+            <StyledHomePageContainer.Form>
+              <Field label='Dê um nome para seu arquivo (opcional)'
+                      id='file-name-id'
+                      name='fileName'
+                      placeholder='Digite um nome para seu arquivo...'/>
+              <Field label='Selecione um arquivo'
+                      id='file-id'
+                      name='csv_arq'
+                      placeholder='Clique aqui para selecionar um arquivo...'
+                      accept='.csv'
+                      onChange={(e) => {
+                        setFieldValue('csv_arq', e.currentTarget.files[0])
+                      }}
+                      as={InputFile}/>
+              <StyledHomePageContainer.Form.Submit type='submit' disabled={!isValid || isSubmitting || !dirty}>
+                {isSubmitting ? (
+                  <ClipLoader // Use the ClipLoader component
+                    size={35} // Adjust size as needed
+                    color={'#ffffff'} // Customize color
+                  />
+                ) : (
+                  <span>Enviar</span>
+                )}
+              </StyledHomePageContainer.Form.Submit>
+            </StyledHomePageContainer.Form>
+          )}
+        </Formik>
+        <StyledHomePageContainer>
+          <MatchingsNotConcluded />
         </StyledHomePageContainer>
-      </StyledHomePageContainer.Reference>
-      <Formik initialValues={{fileName: '', csv_arq: null}}
-              validationSchema={schema}
-              onSubmit={handleSubmit}>
-        {({erros, isValid, dirty, setFieldValue}) => (
-          <StyledHomePageContainer.Form>
-            <Field label='Dê um nome para seu arquivo (opcional)'
-                    id='file-name-id'
-                    name='fileName'
-                    placeholder='Digite um nome para seu arquivo...'/>
-            <Field label='Selecione um arquivo'
-                    id='file-id'
-                    name='csv_arq'
-                    placeholder='Selecionar arquivo...'
-                    accept='.csv'
-                    onChange={(e) => {
-                      setFieldValue('csv_arq', e.currentTarget.files[0])
-                    }}
-                    as={InputFile}/>
-            <StyledHomePageContainer.Form.Submit type='submit' disabled={!isValid || isSubmitting || !dirty}>
-              {isSubmitting ? (
-                <ClipLoader // Use the ClipLoader component
-                  size={35} // Adjust size as needed
-                  color={'#ffffff'} // Customize color
-                />
-              ) : (
-                <span>Enviar</span>
-              )}
-            </StyledHomePageContainer.Form.Submit>
-          </StyledHomePageContainer.Form>
-        )}
-      </Formik>
-      <StyledHomePageContainer>
-        <MatchingsNotConcluded />
       </StyledHomePageContainer>
       <ValidationModal
         modalIsOpen={modalIsOpen}

@@ -115,11 +115,12 @@ def populateMatchingFields(request):
 @csrf_exempt
 def getReferenceFieldsByModel():
     referenceFieldsByModel = {}
-
+    excludedModels = ['FieldMatching', 'ModeloDinamico', 'CustomUser', 'AdminUser']
     appModels = apps.get_app_config('api').get_models()
     for model in appModels:
-        fields = [field.name for field in model._meta.get_fields() if field.concrete]
-        referenceFieldsByModel[model.__name__] = fields
+        if model.__name__ not in excludedModels:
+            fields = [field.name for field in model._meta.get_fields() if field.concrete and field.name != 'id']
+            referenceFieldsByModel[model.__name__] = fields
 
     return referenceFieldsByModel
 
@@ -256,8 +257,8 @@ def getUserChoices(request):
             for row in data:
                 model_name, reference_field, input_field = row
                 if model_name not in userChoices:
-                    userChoices[model_name] = []
-                userChoices[model_name].append({'reference_field': reference_field, 'input_field': input_field})
+                    userChoices[model_name] = {}
+                userChoices[model_name][reference_field] = input_field
 
         return JsonResponse(userChoices, safe=False)
     else:

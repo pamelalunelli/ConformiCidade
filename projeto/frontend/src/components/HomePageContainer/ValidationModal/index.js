@@ -67,8 +67,7 @@ const ValidationModal = ({
             console.log('User choices:', data);
             setUserChoices(data);
         } catch (error) {
-            console.error('Error fetching user choices:', error);
-            toast.error('Erro ao buscar seleções prévias do usuário');
+            //console.error('Error fetching user choices:', error);
         }
     };
 
@@ -113,6 +112,14 @@ const ValidationModal = ({
             window.open(url, '_blank');
             toast.success('Dados enviados com sucesso!');
             closeModal();
+            await fetch('/api/is_concluded/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Token ${token}`
+                },
+                body: JSON.stringify({ userDataId: userDataId, isConcluded: true })
+            });            
         } catch (error) {
             console.error('Error submitting form:', error);
             toast.error('Erro ao enviar dados');

@@ -61,7 +61,7 @@ const MatchingsNotConcluded = () => {
             openModal();
 
             if (!savedUserDataResponse.ok) {
-                throw new Error(`Erro ao buscar objetos: ${savedUserDataResponse.statusText}`);
+                //throw new Error(`Erro ao buscar objetos: ${savedUserDataResponse.statusText}`);
             }
             
             const autosavedFieldsResponse = await fetch('/api/identifying_autosaved_fields/', {
