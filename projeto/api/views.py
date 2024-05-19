@@ -31,6 +31,7 @@ import re
 from api.models import CustomUser
 from django.core.files.base import ContentFile
 from reportlab.lib.utils import ImageReader
+from reportlab.lib.units import inch
 
 CustomUser = get_user_model()
 
@@ -196,6 +197,28 @@ def defaultDataTable(request):
             tables.append(table)
     return JsonResponse(tables, safe=False)
 
+@csrf_exempt
+@api_view(['POST'])
+def fieldDescription(request):
+    if request.method == 'POST':
+        try:
+            clicked_field = request.data.get('clickedField')
+            if not clicked_field:
+                return JsonResponse({'error': 'Nome do campo não fornecido'}, status=400)
+            
+            field = FieldDescription.objects.get(fieldName=clicked_field)
+            
+            field_description = field.fieldDescription
+            
+            return JsonResponse({'fieldDescription': field_description})
+        except FieldDescription.DoesNotExist:
+            return JsonResponse({'error': 'Campo não encontrado'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Método não permitido'}, status=405)
+
+
 @api_view(['POST'])
 @csrf_exempt
 def autosaveForm(request):
@@ -339,16 +362,6 @@ def processForm(request):
 
         except Exception as e:
             return HttpResponse("Ocorreu um erro ao processar os dados: " + str(e), status=500)
-
-from reportlab.lib.styles import ParagraphStyle
-from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.units import inch
-from reportlab.lib.styles import getSampleStyleSheet
-from django.http import HttpResponse
-from io import BytesIO
-import os
 
 def generateReport(iduserdata):
     response = HttpResponse(content_type='application/pdf')

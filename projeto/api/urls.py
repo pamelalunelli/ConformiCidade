@@ -13,6 +13,7 @@ urlpatterns = [
     path('get_reference_fields/', views.defaultDataTable, name='defaultDataTable'),
     path('process_form/', views.processForm, name='processForm'),
     path('retrieving_matching_fields/', matching.retrievingMatchingFields, name='retrievingMatchingFields'),
+    path('field_description/', views.fieldDescription, name='fieldDescription'),
     path('autosave/', views.autosaveForm, name='autosaveForm'),
     path('identifying_autosaved_fields/', views.identifyingAutosavedFields, name='identifyingAutosavedFields'),
     path('is_concluded/', views.isConcluded, name='isConcluded'),

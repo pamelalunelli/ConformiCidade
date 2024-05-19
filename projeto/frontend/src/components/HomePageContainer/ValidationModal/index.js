@@ -3,9 +3,11 @@ import { Formik, Form, Field } from 'formik';
 import { toast } from 'react-toastify';
 import Slider from '../../library/slider';
 import Loader from '../../library/loader';
-import { StyledValidationModal, InfoIcon } from './styles';
+import { StyledValidationModal, InfoIcon, CloseButton } from './styles';
+import { SecondaryButton } from './styles';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import { useToken } from '../../../TokenContext.js';
+
 import axios from 'axios';
 
 const ValidationModal = ({
@@ -22,6 +24,7 @@ const ValidationModal = ({
     const [currentSlide, setCurrentSlide] = useState(0);
     const [selectedField, setSelectedField] = useState(null);
     const [userChoices, setUserChoices] = useState({});
+    const [fieldDescription, setFieldDescription] = useState('');
 
     useEffect(() => {
         fetchObjetos();
@@ -134,12 +137,32 @@ const ValidationModal = ({
         }
     };
 
-    const showFieldDetails = (field) => {
+    const showFieldDetails = async (field) => {
         setSelectedField(field);
+        try {
+            // Envia o nome do campo clicado para o backend
+            const response = await axios.post('/api/field_description/', {
+                clickedField: field
+            }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Token ${token}`
+                }
+            });
+            if (!response.status === 200) {
+                throw new Error('Erro ao buscar descrição do campo');
+            }
+            const data = response.data;
+            console.log('Field description:', data);
+            setFieldDescription(data.fieldDescription);
+        } catch (error) {
+            console.error('Error fetching field description:', error);
+        }
     };
 
     const closeFieldDetails = () => {
         setSelectedField(null);
+        setFieldDescription('');
     };
 
     return (
@@ -149,8 +172,8 @@ const ValidationModal = ({
                     {selectedField && (
                         <div className="field-details-panel">
                             <h3>{selectedField}</h3>
-                            <p>Texto genérico com informações sobre o campo de referência selecionado.</p>
-                            <button onClick={closeFieldDetails}>Fechar</button>
+                            <p>{fieldDescription}</p>
+                            <CloseButton onClick={closeFieldDetails} size="SMALL">Fechar</CloseButton>
                         </div>
                     )}
                     <div className="form-content">
@@ -168,57 +191,57 @@ const ValidationModal = ({
                                         userDataId={userDataId}
                                     >
                                         {defaultList.map((dl, index) => (
-                                            <StyledValidationModal.Container key={index}>
-                                                <div>
-                                                    <StyledValidationModal.List.Title>{dl.name}</StyledValidationModal.List.Title>
-                                                    <StyledValidationModal.List.Subtitle>Campos de Referência</StyledValidationModal.List.Subtitle>
-                                                    <StyledValidationModal.List>
-                                                        {dl.fields.map((field, i) => (
-                                                            <li key={i} onClick={() => showFieldDetails(field)}>
-                                                                <StyledValidationModal.List.FakeSelect>
-                                                                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                                        {field}
-                                                                        <InfoCircleOutlined style={{ marginLeft: '5px' }} />
-                                                                    </div>
-                                                                </StyledValidationModal.List.FakeSelect>
-                                                            </li>
-                                                        ))}
-                                                    </StyledValidationModal.List>
-                                                </div>
-                                                <div>
-                                                    <StyledValidationModal.List.Title>&nbsp;</StyledValidationModal.List.Title>
-                                                    <StyledValidationModal.List.Subtitle>Seus campos</StyledValidationModal.List.Subtitle>
-                                                    <StyledValidationModal.List>
-                                                        {dl.fields.map((field, i) => (
-                                                            <li key={`${dl.name}-${i}`}>
-                                                                {field === 'SUGESTÃO' || field === 'ORDEM ALFABÉTICA' ? (
-                                                                    <StyledValidationModal.DisabledField key={`${dl.name}-${i}`}>
-                                                                        {field}
-                                                                    </StyledValidationModal.DisabledField>
-                                                                ) : (
-                                                                    <Field
-                                                                        component={StyledValidationModal.Select}
-                                                                        name={`${dl.name}.${field}`}
-                                                                        options={parseUserData(field).map(data => ({ value: data, label: data }))}
-                                                                        placeholder='Selecione...'
-                                                                        onChange={(e) => setFieldValue(`${dl.name}.${field}`, e.value)}
-                                                                    />
-                                                                )}
-                                                            </li>
-                                                        ))}
-                                                    </StyledValidationModal.List>
-                                                </div>
-                                            </StyledValidationModal.Container>
-                                        ))}
-                                    </Slider>
-                                </Form>
-                            )}
-                        </Formik>
-                    </div>
-                </div>
-            )}
-        </StyledValidationModal>    
-    ); 
+                                        <StyledValidationModal.Container key={index}>
+                                        <div>
+                                            <StyledValidationModal.List.Title>{dl.name}</StyledValidationModal.List.Title>
+                                            <StyledValidationModal.List.Subtitle>Campos de Referência</StyledValidationModal.List.Subtitle>
+                                            <StyledValidationModal.List>
+                                                {dl.fields.map((field, i) => (
+                                                    <li key={i} onClick={() => showFieldDetails(field)}>
+                                                        <StyledValidationModal.List.FakeSelect>
+                                                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                                {field}
+                                                                <InfoCircleOutlined style={{ marginLeft: '5px' }} />
+                                                            </div>
+                                                        </StyledValidationModal.List.FakeSelect>
+                                                    </li>
+                                                ))}
+                                            </StyledValidationModal.List>
+                                        </div>
+                                        <div>
+                                            <StyledValidationModal.List.Title>&nbsp;</StyledValidationModal.List.Title>
+                                            <StyledValidationModal.List.Subtitle>Seus campos</StyledValidationModal.List.Subtitle>
+                                            <StyledValidationModal.List>
+                                                {dl.fields.map((field, i) => (
+                                                    <li key={`${dl.name}-${i}`}>
+                                                        {field === 'SUGESTÃO' || field === 'ORDEM ALFABÉTICA' ? (
+                                                            <StyledValidationModal.DisabledField key={`${dl.name}-${i}`}>
+                                                                {field}
+                                                            </StyledValidationModal.DisabledField>
+                                                        ) : (
+                                                            <Field
+                                                                component={StyledValidationModal.Select}
+                                                                name={`${dl.name}.${field}`}
+                                                                options={parseUserData(field).map(data => ({ value: data, label: data }))}
+                                                                placeholder='Selecione...'
+                                                                onChange={(e) => setFieldValue(`${dl.name}.${field}`, e.value)}
+                                                            />
+                                                        )}
+                                                    </li>
+                                                ))}
+                                            </StyledValidationModal.List>
+                                        </div>
+                                    </StyledValidationModal.Container>
+                                ))}
+                            </Slider>
+                        </Form>
+                    )}
+                </Formik>
+            </div>
+        </div>
+    )}
+</StyledValidationModal>    
+); 
 };
 
 export default ValidationModal;

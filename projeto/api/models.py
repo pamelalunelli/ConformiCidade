@@ -98,9 +98,14 @@ class ModeloDinamico(models.Model):
     isConcluded = models.BooleanField(default=False)
     pdfFile = models.FileField(upload_to='pdfs/', null=True)
 
+
+class FieldDescription (models.Model):
+    fieldName = models.CharField(max_length=255, null=True)
+    fieldDescription = models.CharField(max_length=5000, null=True)
+    fieldModel = models.CharField(max_length=255, null=True)
+    fieldType = models.CharField(max_length=255, null=True)
+
 '''class AdminUser(models.Model):
-    id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=20)
     email = models.CharField(max_length=90)
     password = models.CharField(max_length=90)'''
 

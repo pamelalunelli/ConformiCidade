@@ -1,6 +1,7 @@
 import styled from 'styled-components'
 import Modal from '../../library/modals'
 import Select from 'react-select'
+import { PrimaryButton } from '../../library/buttons/index.js'
 
 export const StyledValidationModal = styled(Modal)`
     .modal-content {
@@ -119,3 +120,5 @@ StyledValidationModal.DisabledField = styled.div`
     background-color: #f5f5f5; /* Adiciona um fundo para destacar o campo desativado */
     cursor: not-allowed; /* Altera o cursor para indicar que o campo não é clicável */
 `;
+
+export const CloseButton = PrimaryButton;
