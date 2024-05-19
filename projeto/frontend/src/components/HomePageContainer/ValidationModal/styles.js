@@ -3,7 +3,24 @@ import Modal from '../../library/modals'
 import Select from 'react-select'
 
 export const StyledValidationModal = styled(Modal)`
-`
+    .modal-content {
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+    }
+
+    .form-content {
+        flex: 3; /* Ajuste conforme necessário */
+        padding: 20px;
+    }
+
+    .field-details-panel {
+        flex: 1; /* Ajuste conforme necessário */
+        padding: 20px;
+        border-left: 1px solid #ccc; /* Adicione uma borda para separação */
+        background-color: #f9f9f9; /* Cor de fundo para destaque */
+    }
+`;
 
 StyledValidationModal.Container = styled.div(({theme}) =>`
     display: grid;

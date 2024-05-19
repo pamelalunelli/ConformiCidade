@@ -35,21 +35,22 @@ const MatchingsNotConcluded = () => {
                 throw new Error(`Erro ao buscar objetos: ${response.statusText}`);
             }
             const data = await response.json();
-            console.log(data)
             setHistoric(data);
         } catch (error) {
             toast.error(error.message);
         } finally {
             setIsFetching(false);
         }
-    
-    }   
+    };   
 
     const handleRowClick = async (clickedIdUser, clickedId, clickedMatchingTableName) => {
         try {
             setIdUser(clickedIdUser);
             setId(clickedId);
             setMatchingTableName(clickedMatchingTableName);
+
+            // Abra a modal com a propriedade isOpenFromMatchings
+            setIsOpen(true);
 
             const savedUserDataResponse = await axios.post(
                 `/api/retrieving_matching_fields/`,
@@ -63,7 +64,6 @@ const MatchingsNotConcluded = () => {
             );
             
             setUserData(savedUserDataResponse.data);
-            openModal();
 
             const autosavedFieldsResponse = await fetch('/api/identifying_autosaved_fields/', {
                 method: 'POST',
@@ -82,11 +82,8 @@ const MatchingsNotConcluded = () => {
             }
             
             toast.success('Campos autosaved recuperados com sucesso!');
-            openModal();
         } catch (error) {
             toast.error(error.message);
-        } finally {
-            setIsFetching(false);
         }
     };
     
@@ -122,6 +119,7 @@ const MatchingsNotConcluded = () => {
                             userData={userData}
                             userDataId={id}
                             matchingTableName={matchingTableName}
+                            isOpenFromMatchings={true} // Adicione a propriedade isOpenFromMatchings
                         />
                     )}
                 </>

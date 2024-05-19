@@ -47,11 +47,11 @@ const HomePageContainer = () => {
 
   const handleSubmit = async (values, { resetForm }) => {
     setIsSubmitting(true);
-
+  
     const formData = new FormData();
     formData.append('csv_arq', values.csv_arq);
     formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
-
+  
     try {
       const response = await axios.post('/api/upload/', formData, {
         headers: {
@@ -60,29 +60,35 @@ const HomePageContainer = () => {
           'Authorization': `Token ${token}`, // Use o token global aqui
         },
       });
-
+  
       if (response.status === 200) {
+        console.log('Resposta do envio do arquivo:', response.data); // Verificar a resposta do envio do arquivo
+  
         const userDataId = response.data.id;
         setUserDataId(userDataId);
-
+  
         const fieldsCSV = response.data.fields;
         const tableNameCSV = response.data.tableName;
-
+  
         try {
           const matchingTableName = await axios.post(
             `/api/create_matching_table/`,
             tableNameCSV,
-            { headers: { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` } } // Adicione o token aqui também
+            { headers: { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` } }
           );
-
+  
+          console.log('Tabela de correspondência criada:', matchingTableName.data); // Verificar se a tabela de correspondência foi criada corretamente
+  
           const userDataResponse = await axios.post(
             `/api/populate_matching_fields/`,
             { matchingTableName, fieldsCSV, userDataId },
-            { headers: { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` } } // E aqui
+            { headers: { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` } }
           );
-
+  
+          console.log('Dados do usuário recebidos:', userDataResponse.data); // Verificar se os dados do usuário foram recebidos corretamente
+  
           setUserData(userDataResponse.data);
-          setMatchingTableName(matchingTableName.data); // Set matchingTableName state
+          setMatchingTableName(matchingTableName.data);
           openModal();
           resetForm();
         } catch (userDataError) {
@@ -96,7 +102,7 @@ const HomePageContainer = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  };  
   
   return (
     <>
