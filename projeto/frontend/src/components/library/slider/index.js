@@ -16,7 +16,7 @@ const Slider = ({
 
   useEffect(() => {
     handleAutosave(values);
-    settingAutosavedFields(); // Chamada para a função de configuração de campos salvos automaticamente
+    settingAutosavedFields();
   }, [currentSlide, values]);
 
   const handleAutosave = async (values) => {
@@ -26,7 +26,7 @@ const Slider = ({
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Token ${token}`
-      },
+        },
         body: JSON.stringify({ ...values, userDataId }),
       });
       if (!response.ok) {
@@ -47,27 +47,42 @@ const Slider = ({
         },
         body: JSON.stringify({ userDataId }),
       });
-  
+
       if (!response.ok) {
         throw new Error('Erro ao salvar dados.');
       }
     } catch (error) {
-      // Lidar com erros, se necessário
       console.error('Erro ao executar a chamada à API:', error);
     }
   };
 
   const nextSlide = async () => {
     const nextIndex = currentSlide + 1;
-    setSelectedList([...selectedList, nextIndex]);
+    setSelectedList((prevList) => [...prevList, nextIndex]);
     setCurrentSlide(nextIndex);
     await handleAutosave(values);
   };
 
   const previousSlide = async () => {
     const previousIndex = currentSlide - 1;
-    setSelectedList(selectedList.filter(index => index !== currentSlide));
+    setSelectedList((prevList) => prevList.filter(index => index !== currentSlide));
     setCurrentSlide(previousIndex);
+    await handleAutosave(values);
+  };
+
+  const jumpToSlide = async (index) => {
+    let newSelectedList = [...selectedList];
+    if (index > currentSlide) {
+      for (let i = currentSlide + 1; i <= index; i++) {
+        if (!newSelectedList.includes(i)) {
+          newSelectedList.push(i);
+        }
+      }
+    } else if (index < currentSlide) {
+      newSelectedList = newSelectedList.filter(i => i <= index);
+    }
+    setSelectedList(newSelectedList);
+    setCurrentSlide(index);
     await handleAutosave(values);
   };
 
@@ -78,7 +93,7 @@ const Slider = ({
           <StyledSlider.Dot
             key={index}
             isSelected={selectedList.includes(index)}
-            onClick={() => setCurrentSlide(index)}
+            onClick={() => jumpToSlide(index)}
           >
             {index + 1}
           </StyledSlider.Dot>
