@@ -25,6 +25,7 @@ const ValidationModal = ({
     const [selectedField, setSelectedField] = useState(null);
     const [userChoices, setUserChoices] = useState({});
     const [fieldDescription, setFieldDescription] = useState('');
+    const [isLoadingUserChoices, setLoadingUserChoices] = useState(false);
 
     useEffect(() => {
         fetchObjetos();
@@ -51,7 +52,7 @@ const ValidationModal = ({
                 throw new Error('Erro ao buscar objetos');
             }
             const data = await response.json();
-            console.log('Data fetched:', data);
+            //console.log('Data fetched:', data);
             setDefaultList(data);
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -63,6 +64,8 @@ const ValidationModal = ({
 
     const fetchUserChoices = async () => {
         try {
+            setLoadingUserChoices(true)
+
             const response = await axios.post('/api/get_user_choices/', {
                 matchingTableName
             }, {
@@ -75,10 +78,12 @@ const ValidationModal = ({
                 throw new Error('Erro ao buscar seleções prévias do usuário');
             }
             const data = response.data;
-            console.log('User choices:', data);
+            
             setUserChoices(data);
         } catch (error) {
             console.error('Error fetching user choices:', error);
+        } finally {
+            setLoadingUserChoices(false);
         }
     };
 
@@ -96,7 +101,7 @@ const ValidationModal = ({
         }
         return [];
     };
-
+    //console.log('User choices:', userChoices);
     const initialValues = defaultList.reduce((acc, modelo) => {
         acc[modelo.name] = modelo.fields.reduce((fields, campo) => {
             fields[campo] = '';
@@ -164,10 +169,10 @@ const ValidationModal = ({
         setSelectedField(null);
         setFieldDescription('');
     };
-
+    //console.log(userChoices)
     return (
         <StyledValidationModal isOpen={modalIsOpen} onClose={closeModal} title={'Valide seus dados'} subtitle={'Para cada campo da esquerda (modelo de referência), encontre o correspondente no seu modelo de entrada. Caso não encontre correspondência, você pode deixar o campo vazio.'} primaryButtonLabel={'Enviar'} btnType={'submit'}>
-            {isFetching ? <Loader /> : (
+            {(isFetching || isLoadingUserChoices) ? <Loader /> : (
                 <div className="modal-content">
                     {selectedField && (
                         <div className="field-details-panel">
@@ -177,8 +182,8 @@ const ValidationModal = ({
                         </div>
                     )}
                     <div className="form-content">
-                        <Formik initialValues={initialValues} onSubmit={handleSubmit}>
-                            {({ setFieldValue, values }) => (
+                        <Formik initialValues={{...initialValues, ...(!!userChoices && {...userChoices})}} onSubmit={handleSubmit}>
+                            {({ setFieldValue, values }) => (  //console.log(values),
                                 <Form id={'validation-form-id'}>
                                     <Slider
                                         totalSlides={defaultList.length}
@@ -218,13 +223,19 @@ const ValidationModal = ({
                                                             <StyledValidationModal.DisabledField key={`${dl.name}-${i}`}>
                                                                 {field}
                                                             </StyledValidationModal.DisabledField>
-                                                        ) : (
+                                                        ) : ( console.log("values:", values[dl.name][field]),
+                                                                //console.log("field:", field),
+                                                                //console.log("dl:", dl),
                                                             <Field
                                                                 component={StyledValidationModal.Select}
                                                                 name={`${dl.name}.${field}`}
                                                                 options={parseUserData(field).map(data => ({ value: data, label: data }))}
                                                                 placeholder='Selecione...'
                                                                 onChange={(e) => setFieldValue(`${dl.name}.${field}`, e.value)}
+                                                                menuPlacement='auto'
+                                                                menuPortalTarget={document.body}
+                                                                {...(!!values[dl.name][field] && {defaultValue: {value: values[dl.name][field], label: values[dl.name][field]}})}
+                                                                //defaultValue={{value: values[dl.name][field], label: values[dl.name][field]}}
                                                             />
                                                         )}
                                                     </li>

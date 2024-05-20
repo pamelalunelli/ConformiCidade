@@ -8,6 +8,8 @@ export const StyledValidationModal = styled(Modal)`
         display: flex;
         flex-direction: row;
         width: 100%;
+        max-height: 65vh;
+        overflow-y: auto;
     }
 
     .form-content {
@@ -64,6 +66,7 @@ StyledValidationModal.Select = styled(Select).attrs({classNamePrefix: 'fieldsSel
             border: none;
             border-radius: 8px;
             background: #F3F3F3;
+            min-height: 39px;
         }
         &__indicator{
             color: #3D3D3D;
