@@ -113,7 +113,10 @@ const HomePageContainer = () => {
         <div>
           <StyledHomePageContainer.Title>Validador de Dados Cadastrais</StyledHomePageContainer.Title>
           <StyledHomePageContainer.Paragraph>
-            Este validador tem como objetivo auxiliar o mapeamento das entidades presentes nos Cadastros Imobiliários Fiscais dos municípios tendo como base um modelo concebido a partir do segmento fiscal do modelo proposto por Santos (2022), tese de doutorado que teve como objeto de estudo os Direitos, Restrições e Responsabilidades (RRR) sob o aspecto técnico da ISO 19.152:2012 (Land Administration Domain Model).
+            Este validador tem como objetivo auxiliar o mapeamento das entidades presentes nos Cadastros Imobiliários Fiscais dos municípios tendo como base um modelo concebido a partir do segmento fiscal do modelo proposto por Santos (2022)*, <br />
+            tese de doutorado que teve como objeto de estudo os Direitos, Restrições e Responsabilidades (RRR) sob o aspecto técnico da ISO 19.152:2012 (Land Administration Domain Model).<br />
+            <br />*Santos, Suzana Daniela da Rocha. Sistematização e Modelagem dos Direitos, Restrições e Responsabilidades no Cadastro Territorial No Contexto Do Sistema De Administração Territorial Brasileiro. <br />Tese (Doutorado em Ciências Geodésicas) - Universidade Federal do Paraná. Curitiba, 2022.
+            
           </StyledHomePageContainer.Paragraph>
         </div>
         <StyledHomePageContainer.Reference>
@@ -122,7 +125,7 @@ const HomePageContainer = () => {
               Arquivo de Entrada
             </StyledHomePageContainer.Reference.Title>
             <StyledHomePageContainer.Paragraph>
-              O arquivo a ser carregado deve ser um comma-separated value (*.csv) ou de texto (*.txt) e deve conter, obrigatoriamente, em sua primeira linha, os nomes dos campos a serem mapeados no processo. O arquivo pode ou não conter dados.
+              O arquivo a ser carregado deve ser um comma-separated value (*.csv) ou de texto (*.txt) e deve conter, obrigatoriamente, em sua primeira linha, os nomes dos campos a serem mapeados no processo, <br />podendo ou não conter dados.
             </StyledHomePageContainer.Paragraph>
           </div>
           <StyledHomePageContainer>

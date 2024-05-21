@@ -136,7 +136,7 @@ const HistoryContainer = ({
                         </thead>
                         <tbody>
                             {!!historic && historic.length > 0 ? (
-                                historic.map(item => (
+                                historic.map(item => ( console.log(item),
                                     <tr key={item.id}>
                                         <td>
                                             {editingNameId === item.id ? (
@@ -156,7 +156,15 @@ const HistoryContainer = ({
                                             )} 
                                         </td>
                                         <td>
-                                            {new Date(item.timestamp).toLocaleDateString()}
+                                        {new Date(item.timestamp).toLocaleString('pt-BR', { 
+                                            day: '2-digit', 
+                                            month: '2-digit', 
+                                            year: 'numeric', 
+                                            hour: '2-digit', 
+                                            minute: '2-digit', 
+                                            second: '2-digit', 
+                                            hour12: false 
+                                        })}
                                         </td>
                                         <td>
                                             <StyledHistoryContainer.Actions>
