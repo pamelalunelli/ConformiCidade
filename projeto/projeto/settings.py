@@ -27,12 +27,13 @@ SECRET_KEY = '00$a$n1xf4!v7!q7+en$*376y#+0@4zuv=#xh*4!rs)3s0$@=u'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'whitenoise.runserver_nostatic',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -48,6 +49,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -69,6 +71,7 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             os.path.join(BASE_DIR, 'api', 'templates'),
+            os.path.join(BASE_DIR, 'frontend', 'templates'),
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -96,6 +99,15 @@ DATABASES = {
         'HOST': 'localhost',
         'PORT': '5432',
     }
+
+    #'default': {
+    #    'ENGINE': 'django.db.backends.postgresql',
+    #    'NAME': 'conformicidade',
+    #    'USER': 'postgres',
+    #    'PASSWORD': 'Rb5!!!!!',
+    #    'HOST': 'conformicidade.postgres.database.azure.com',
+    #    'PORT': '5432',
+    #}
 }
 
 # Password validation
@@ -137,6 +149,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'frontend/static')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 SITE_ID = 1
 
@@ -150,3 +163,6 @@ REST_FRAMEWORK = {
         # Adicione outras classes de autenticação, se necessário
     ],
 }
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
