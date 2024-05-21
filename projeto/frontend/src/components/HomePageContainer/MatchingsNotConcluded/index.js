@@ -75,12 +75,7 @@ const MatchingsNotConcluded = () => {
                     iduser: clickedIdUser,
                     id: clickedId
                 })
-            });
-    
-            if (!autosavedFieldsResponse.ok) {
-                throw new Error(`Erro ao recuperar campos autosaved: ${autosavedFieldsResponse.statusText}`);
-            }
-            
+            });            
             toast.success('Campos autosaved recuperados com sucesso!');
         } catch (error) {
             toast.error(error.message);

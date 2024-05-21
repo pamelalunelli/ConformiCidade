@@ -224,19 +224,24 @@ const ValidationModal = ({
                                                                 {field}
                                                             </StyledValidationModal.DisabledField>
                                                         ) : ( console.log("values:", values[dl.name][field]),
-                                                                //console.log("field:", field),
-                                                                //console.log("dl:", dl),
-                                                            <Field
-                                                                component={StyledValidationModal.Select}
-                                                                name={`${dl.name}.${field}`}
-                                                                options={parseUserData(field).map(data => ({ value: data, label: data }))}
-                                                                placeholder='Selecione...'
-                                                                onChange={(e) => setFieldValue(`${dl.name}.${field}`, e.value)}
-                                                                menuPlacement='auto'
-                                                                menuPortalTarget={document.body}
-                                                                {...(!!values[dl.name][field] && {defaultValue: {value: values[dl.name][field], label: values[dl.name][field]}})}
-                                                                //defaultValue={{value: values[dl.name][field], label: values[dl.name][field]}}
-                                                            />
+                                                        <Field
+                                                        component={StyledValidationModal.Select}
+                                                        name={`${dl.name}.${field}`}
+                                                        options={parseUserData(field).map(data => ({ value: data, label: data }))}
+                                                        placeholder="Selecione..."
+                                                        onChange={(e) => setFieldValue(`${dl.name}.${field}`, e.value)}
+                                                        menuPlacement="auto"
+                                                        menuPortalTarget={document.body}
+                                                        menuPosition="fixed"
+                                                        styles={{
+                                                          menu: (provided) => ({
+                                                            ...provided,
+                                                            zIndex: 1050, // Certifique-se de que isso seja maior do que o z-index da modal
+                                                          }),
+                                                          menuPortal: base => ({ ...base, zIndex: 1050 }) // Adiciona z-index ao portal
+                                                        }}
+                                                        {...(!!values[dl.name][field] && { defaultValue: { value: values[dl.name][field], label: values[dl.name][field] } })}
+                                                      />                                                      
                                                         )}
                                                     </li>
                                                 ))}
