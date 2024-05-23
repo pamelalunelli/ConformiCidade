@@ -13,7 +13,7 @@ export const StyledValidationModal = styled(Modal)`
     }
 
     .form-content {
-        flex: 3; /* Ajuste conforme necessário */
+        flex: 1; /* Ajuste conforme necessário */
         padding: 20px;
     }
 
@@ -22,6 +22,7 @@ export const StyledValidationModal = styled(Modal)`
         padding: 20px;
         border-left: 1px solid #ccc; /* Adicione uma borda para separação */
         background-color: #f9f9f9; /* Cor de fundo para destaque */
+        width: 100%; /* Expande horizontalmente */
     }
 `;
 

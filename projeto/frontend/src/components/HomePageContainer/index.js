@@ -9,7 +9,7 @@ import { InputFile, Field } from '../library/inputs';
 import ValidationModal from './ValidationModal';
 import ClipLoader from "react-spinners/ClipLoader";
 import { StyledHomePageContainer } from './styles';
-import ERDiagram from '../../../static/images/ERDiagram.jpg';
+import ERDiagram from '../../../static/images/umlTCC.png';
 import Logo from '../../../static/images/logoSemFundo.png'
 import { useToken } from '../../TokenContext.js'; // Importe o hook useToken
 

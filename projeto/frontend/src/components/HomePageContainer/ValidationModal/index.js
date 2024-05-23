@@ -171,7 +171,7 @@ const ValidationModal = ({
     };
     //console.log(userChoices)
     return (
-        <StyledValidationModal isOpen={modalIsOpen} onClose={closeModal} title={'Valide seus dados'} subtitle={'Para cada campo da esquerda (modelo de referência), encontre o correspondente no seu modelo de entrada. Caso não encontre correspondência, você pode deixar o campo vazio.'} primaryButtonLabel={'Enviar'} btnType={'submit'}>
+        <StyledValidationModal isOpen={modalIsOpen} onClose={closeModal} title={'Valide seus dados'} subtitle={'Para cada campo da esquerda (modelo de referência), encontre o correspondente no seu modelo de entrada. Caso não encontre correspondência, você pode deixar o campo vazio. Clique sobre os campos de referência para obter maiores informações sobre o tipo de dado.'} primaryButtonLabel={'Enviar'} btnType={'submit'}>
             {(isFetching || isLoadingUserChoices) ? <Loader /> : (
                 <div className="modal-content">
                     {selectedField && (
@@ -225,23 +225,26 @@ const ValidationModal = ({
                                                             </StyledValidationModal.DisabledField>
                                                         ) : ( console.log("values:", values[dl.name][field]),
                                                         <Field
-                                                        component={StyledValidationModal.Select}
-                                                        name={`${dl.name}.${field}`}
-                                                        options={parseUserData(field).map(data => ({ value: data, label: data }))}
-                                                        placeholder="Selecione..."
-                                                        onChange={(e) => setFieldValue(`${dl.name}.${field}`, e.value)}
-                                                        menuPlacement="auto"
-                                                        menuPortalTarget={document.body}
-                                                        menuPosition="fixed"
-                                                        styles={{
-                                                          menu: (provided) => ({
-                                                            ...provided,
-                                                            zIndex: 1050, // Certifique-se de que isso seja maior do que o z-index da modal
-                                                          }),
-                                                          menuPortal: base => ({ ...base, zIndex: 1050 }) // Adiciona z-index ao portal
-                                                        }}
-                                                        {...(!!values[dl.name][field] && { defaultValue: { value: values[dl.name][field], label: values[dl.name][field] } })}
-                                                      />                                                      
+                                                            component={StyledValidationModal.Select}
+                                                            name={`${dl.name}.${field}`}
+                                                            options={[
+                                                                { value: '', label: '' }, // Opção vazia com o placeholder
+                                                                ...parseUserData(field).map(data => ({ value: data, label: data }))
+                                                            ]}
+                                                            placeholder="Selecione..."
+                                                            onChange={(e) => setFieldValue(`${dl.name}.${field}`, e.value === '' ? null : e.value)} // Definir como null se o valor for uma string vazia
+                                                            menuPlacement="auto"
+                                                            menuPortalTarget={document.body}
+                                                            menuPosition="fixed"
+                                                            styles={{
+                                                                menu: (provided) => ({
+                                                                    ...provided,
+                                                                    zIndex: 1050,
+                                                                }),
+                                                                menuPortal: base => ({ ...base, zIndex: 1050 })
+                                                            }}
+                                                            {...(!!values[dl.name][field] && { defaultValue: { value: values[dl.name][field], label: values[dl.name][field] } })}
+                                                        />                                                      
                                                         )}
                                                     </li>
                                                 ))}
