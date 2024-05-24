@@ -232,7 +232,6 @@ const ValidationModal = ({
                                                             component={StyledValidationModal.Select}
                                                             name={`${dl.name}.${field}`}
                                                             options={[
-                                                                { value: '', label: '' }, // Opção vazia com o placeholder
                                                                 ...parseUserData(field).map(data => ({ value: data, label: data }))
                                                             ]}
                                                             placeholder="Selecione..."
