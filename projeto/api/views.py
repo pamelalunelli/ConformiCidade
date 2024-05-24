@@ -238,7 +238,6 @@ def autosaveForm(request):
                 cursor.execute(sql, (idDinamicModel, userId))
                 matchingTableName = cursor.fetchone()[0]
 
-            user_choices = {}  
             for tableNameTest, fieldsData in data.items():
                 for referenceFieldTest, inputFieldTest in fieldsData.items():
                     existing_field_matching = FieldMatching.objects.filter(
@@ -248,19 +247,44 @@ def autosaveForm(request):
                         matchingTableName=matchingTableName
                     ).first()
 
-                    # Verifica se já existe um registro no banco de dados
                     if existing_field_matching:
-                        # Atualiza o inputField se houver um valor não vazio no inputFieldTest
+                        previous_input_field = existing_field_matching.inputField
                         if inputFieldTest.strip():
                             existing_field_matching.inputField = inputFieldTest
                             existing_field_matching.save()
+
+                            if previous_input_field != inputFieldTest:
+                                with connection.cursor() as inner_cursor:
+                                    sql_false = f"""
+                                        UPDATE {matchingTableName}
+                                        SET userChoice = FALSE
+                                        WHERE referencefield = %s AND inputfield = %s AND iduserdata = %s
+                                    """
+                                    #print(f"SQL False: {sql_false} - Values: [{referenceFieldTest}, {previous_input_field}, {idDinamicModel}]")
+                                    inner_cursor.execute(sql_false, [referenceFieldTest, previous_input_field, idDinamicModel])
+                                
+                                sql_true = f"""
+                                    UPDATE {matchingTableName}
+                                    SET userChoice = TRUE
+                                    WHERE referencefield = %s AND inputfield = %s AND iduserdata = %s
+                                """
+                                #print(f"SQL True: {sql_true} - Values: [{referenceFieldTest}, {inputFieldTest}, {idDinamicModel}]")
+                                inner_cursor.execute(sql_true, [referenceFieldTest, inputFieldTest, idDinamicModel])
+
                         else:
-                            # Se o inputFieldTest estiver vazio, atualize-o para uma string vazia
                             existing_field_matching.inputField = ""
                             existing_field_matching.save()
+
+                            with connection.cursor() as inner_cursor:
+                                sql_false = f"""
+                                    UPDATE {matchingTableName}
+                                    SET userChoice = FALSE
+                                    WHERE referencefield = %s AND iduserdata = %s
+                                """
+                                #print(f"SQL False (empty): {sql_false} - Values: [{referenceFieldTest}, {idDinamicModel}]")
+                                inner_cursor.execute(sql_false, [referenceFieldTest, idDinamicModel])
                     else:
-                        # Crie um novo registro mesmo que o inputFieldTest esteja vazio
-                        FieldMatching.objects.create(
+                        new_field_matching = FieldMatching.objects.create(
                             inputField=inputFieldTest,
                             referenceField=referenceFieldTest,
                             tableName=tableNameTest,
@@ -268,13 +292,19 @@ def autosaveForm(request):
                             matchingTableName=matchingTableName
                         )
 
-                    # Atualiza o dicionário user_choices
-                    user_choices.setdefault(tableNameTest, {})[referenceFieldTest] = inputFieldTest
-            
-            # Opcional: Você pode adicionar uma resposta personalizada aqui se desejar
+                        with connection.cursor() as inner_cursor:
+                            sql_true = f"""
+                                UPDATE {matchingTableName}
+                                SET userChoice = TRUE
+                                WHERE referencefield = %s AND inputfield = %s AND iduserdata = %s
+                            """
+                            #print(f"SQL True (new): {sql_true} - Values: [{referenceFieldTest}, {inputFieldTest}, {idDinamicModel}]")
+                            inner_cursor.execute(sql_true, [referenceFieldTest, inputFieldTest, idDinamicModel])
+
             return HttpResponse("Dados salvos automaticamente", status=200)
 
         except Exception as e:
+            print(f"Error: {str(e)}")
             return HttpResponse("Ocorreu um erro ao processar os dados: " + str(e), status=500)
 
 @api_view(['POST'])
