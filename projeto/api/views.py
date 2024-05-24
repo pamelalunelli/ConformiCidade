@@ -28,7 +28,7 @@ from django.template.loader import render_to_string
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import  SimpleDocTemplate, Paragraph, Table, TableStyle, Image, Spacer
 import re
-from api.models import CustomUser
+from api.models import CustomUser, FieldMatching
 from django.core.files.base import ContentFile
 from reportlab.lib.utils import ImageReader
 from reportlab.lib.units import inch
@@ -183,13 +183,13 @@ def userData(request, id):
 @csrf_exempt
 def defaultDataTable(request):
 
-    excludedTables = ['FieldMatching', 'ModeloDinamico', 'CustomUser', 'AdminUser']
+    excludedTables = ['FieldMatching', 'ModeloDinamico', 'CustomUser', 'AdminUser', 'FieldDescription']
     models = apps.get_app_config('api').get_models()
     tables = []
     for model in models:
         if model._meta.app_label == 'api' and not model._meta.abstract and model._meta.object_name not in excludedTables:
             modelName = model._meta.object_name
-            fields = [field.name for field in model._meta.get_fields() if field.concrete and field.name != 'id']
+            fields = [field.name for field in model._meta.get_fields() if field.concrete and field.name != 'id' and not field.name.startswith('fk_')]
             table = {
                 'name': modelName,
                 'fields': fields,
@@ -224,7 +224,6 @@ def fieldDescription(request):
 def autosaveForm(request):
     if request.method == 'POST':
         try:
-
             data = json.loads(request.body)
             idDinamicModel = data.pop('userDataId', None)
             userId = CustomUser.objects.get(username=request.user).id
@@ -237,36 +236,42 @@ def autosaveForm(request):
                     WHERE id = %s AND iduser = %s
                 """
                 cursor.execute(sql, (idDinamicModel, userId))
-
-                #print(sql)
                 matchingTableName = cursor.fetchone()[0]
-
 
             user_choices = {}  
             for tableNameTest, fieldsData in data.items():
                 for referenceFieldTest, inputFieldTest in fieldsData.items():
-                    if inputFieldTest.strip():
-                        existing_field_matching = FieldMatching.objects.filter(
+                    existing_field_matching = FieldMatching.objects.filter(
+                        referenceField=referenceFieldTest,
+                        tableName=tableNameTest,
+                        iduserdata=idDinamicModel,
+                        matchingTableName=matchingTableName
+                    ).first()
+
+                    # Verifica se já existe um registro no banco de dados
+                    if existing_field_matching:
+                        # Atualiza o inputField se houver um valor não vazio no inputFieldTest
+                        if inputFieldTest.strip():
+                            existing_field_matching.inputField = inputFieldTest
+                            existing_field_matching.save()
+                        else:
+                            # Se o inputFieldTest estiver vazio, atualize-o para uma string vazia
+                            existing_field_matching.inputField = ""
+                            existing_field_matching.save()
+                    else:
+                        # Crie um novo registro mesmo que o inputFieldTest esteja vazio
+                        FieldMatching.objects.create(
+                            inputField=inputFieldTest,
                             referenceField=referenceFieldTest,
                             tableName=tableNameTest,
                             iduserdata=idDinamicModel,
                             matchingTableName=matchingTableName
-                        ).first()
-                        if existing_field_matching:
-                            existing_field_matching.inputField = inputFieldTest
-                            existing_field_matching.save()
-                        else:
-                            FieldMatching.objects.create(
-                                inputField=inputFieldTest,
-                                referenceField=referenceFieldTest,
-                                tableName=tableNameTest,
-                                iduserdata=idDinamicModel,
-                                matchingTableName=matchingTableName
-                            )
-                        user_choices.setdefault(tableNameTest, {})[referenceFieldTest] = inputFieldTest
+                        )
+
+                    # Atualiza o dicionário user_choices
+                    user_choices.setdefault(tableNameTest, {})[referenceFieldTest] = inputFieldTest
             
             # Opcional: Você pode adicionar uma resposta personalizada aqui se desejar
-            
             return HttpResponse("Dados salvos automaticamente", status=200)
 
         except Exception as e:
@@ -620,11 +625,40 @@ class CheckAvailabilityView(CreateAPIView):
 
         return Response({'emails': emails, 'usernames': usernames}, status=status.HTTP_200_OK)
     
-def minha_view(request):
-    #print("Usuário autenticado:", request.user.is_authenticated)
-    if request.user.is_authenticated:
-        # Usuário autenticado, faça o que precisar aqui
-        return JsonResponse({'message': 'Usuário está logado'})
-    else:
-        # Usuário não autenticado, pode retornar uma resposta de erro ou redirecionar para a página de login
-        return JsonResponse({'error': 'Usuário não está logado'}, status=401)
+def generateFieldDescription():
+    models = [
+        BR_CaracteristicasTerreno,
+        BR_CaracteristicasEdificacao,
+        BR_Infraestrutura,
+        BR_Tributo,
+        BR_TrechoLogradouro,
+        BR_EnderecoImovel,
+        BR_EnderecoCorrespondencia,
+        BR_PessoaJuridica,
+        BR_PessoaFisica,
+        BR_ContatoPessoa,
+        BR_DocumentoPessoa,
+        BR_Pessoa,
+        BR_ImovelFiscal
+    ]
+
+    insert_statements = []
+
+    for model in models:
+        fields = model._meta.get_fields()
+        model_name = model.__name__
+
+        for field in fields:
+            if hasattr(field, 'verbose_name'):
+                field_name = field.name
+                field_description = field.verbose_name
+                field_type = field.db_type(connection).split(" ")[0]
+
+                insert_statement = f"('{field_name}', '{field_description}', '{model_name}', '{field_type}')"
+                insert_statements.append(insert_statement)
+
+    insert_sql = f"INSERT INTO public.api_fielddescription (\"fieldName\", \"fieldDescription\", \"fieldModel\", \"fieldType\") VALUES\n"
+    insert_sql += ",\n".join(insert_statements)
+    print(insert_sql)
+    return insert_sql
+
