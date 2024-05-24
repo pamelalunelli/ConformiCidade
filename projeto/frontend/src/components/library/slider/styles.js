@@ -14,11 +14,23 @@ StyledSlider.Actions = styled.div`
   gap: 8px;
 `;
 
+StyledSlider.DotsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: ${({ theme }) => theme.spacing.xl}; /* Adjust margin-bottom as needed */
+`;
+
+StyledSlider.Label = styled.div`
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 25px;
+`;
+
 StyledSlider.Dots = styled.div`
   width: 100%;
   display: flex;
   justify-content: space-between;
-  margin-bottom: ${({ theme }) => theme.spacing.xl}; /* Adjust margin-bottom as needed */
   overflow: hidden;
   position: relative;
 `;
@@ -28,14 +40,14 @@ StyledSlider.Dot = styled.div(({ isSelected }) => `
   height: 20px;
   background: ${isSelected ? '#0049DD' : '#95B5F5'};
   border-radius: 100%;
-  position: relative; /* Maintain relative positioning */
+  position: relative;
   cursor: pointer;
   font-size: 12px;
   color: ${isSelected ? '#FFFFFF' : '#000000'};
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1; /* Move dots to a higher z-index */
+  z-index: 1;
 `);
 
 StyledSlider.Line = styled.div`
@@ -44,8 +56,7 @@ StyledSlider.Line = styled.div`
   left: 0;
   width: 100%;
   height: 3px;
-  background-color: #95B5F5; /* Light blue color */
-  /* Progress bar styling (remains unchanged) */
+  background-color: #95B5F5;
   &::after {
     content: '';
     position: absolute;
@@ -57,7 +68,7 @@ StyledSlider.Line = styled.div`
     background-color: #0049DD;
     transform: translateY(-50%);
     transition: width 0.3s ease-in-out;
-    z-index: 0; /* Move progress bar to a lower z-index */
+    z-index: 0;
   }
 `;
 

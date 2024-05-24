@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PrimaryButton, SecondaryButton } from '../buttons';
-import { StyledSlider } from './styles';
+import StyledSlider from './styles';
 import { useToken } from '../../../TokenContext.js';
 
 const Slider = ({
@@ -88,18 +88,21 @@ const Slider = ({
 
   return (
     <StyledSlider>
-      <StyledSlider.Dots>
-        {[...Array(totalSlides).keys()].map(index => (
-          <StyledSlider.Dot
-            key={index}
-            isSelected={selectedList.includes(index)}
-            onClick={() => jumpToSlide(index)}
-          >
-            {index + 1}
-          </StyledSlider.Dot>
-        ))}
-        <StyledSlider.Line progress={currentSlide / (totalSlides - 1)} />
-      </StyledSlider.Dots>
+      <StyledSlider.DotsContainer>
+        <StyledSlider.Label>Barra de progresso navegável</StyledSlider.Label>
+        <StyledSlider.Dots>
+          {[...Array(totalSlides).keys()].map(index => (
+            <StyledSlider.Dot
+              key={index}
+              isSelected={selectedList.includes(index)}
+              onClick={() => jumpToSlide(index)}
+            >
+              {index + 1}
+            </StyledSlider.Dot>
+          ))}
+          <StyledSlider.Line progress={currentSlide / (totalSlides - 1)} />
+        </StyledSlider.Dots>
+      </StyledSlider.DotsContainer>
       {React.Children.toArray(children).map((child, i) => (
         <StyledSlider.Slide key={i} showSlide={i === currentSlide}>
           {child}
