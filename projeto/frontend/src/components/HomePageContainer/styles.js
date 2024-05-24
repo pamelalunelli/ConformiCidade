@@ -44,3 +44,10 @@ StyledHomePageContainer.Form.Submit = styled(PrimaryButton)`
     margin-top: ${({theme}) => theme.spacing.sm};
     justify-self: end;
 `
+
+StyledHomePageContainer.ImageFooter = styled.p(({theme}) =>`
+    font-size: 1rem;
+    color: #3D3D3D;
+    margin: 4px 0 0 0;
+    text-align: center;
+`)

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Formik, Form, Field } from 'formik';
+import Select from 'react-select';
 import { toast } from 'react-toastify';
 import Slider from '../../library/slider';
 import Loader from '../../library/loader';
@@ -35,7 +36,6 @@ const ValidationModal = ({
     }, []);
 
     useEffect(() => {
-        // Fecha a janela lateral quando o slide atual mudar
         setSelectedField(null);
     }, [currentSlide]);
 
@@ -52,7 +52,6 @@ const ValidationModal = ({
                 throw new Error('Erro ao buscar objetos');
             }
             const data = await response.json();
-            //console.log('Data fetched:', data);
             setDefaultList(data);
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -64,7 +63,7 @@ const ValidationModal = ({
 
     const fetchUserChoices = async () => {
         try {
-            setLoadingUserChoices(true)
+            setLoadingUserChoices(true);
 
             const response = await axios.post('/api/get_user_choices/', {
                 matchingTableName
@@ -101,7 +100,7 @@ const ValidationModal = ({
         }
         return [];
     };
-    //console.log('User choices:', userChoices);
+
     const initialValues = defaultList.reduce((acc, modelo) => {
         acc[modelo.name] = modelo.fields.reduce((fields, campo) => {
             fields[campo] = '';
@@ -145,7 +144,6 @@ const ValidationModal = ({
     const showFieldDetails = async (field) => {
         setSelectedField(field);
         try {
-            // Envia o nome do campo clicado para o backend
             const response = await axios.post('/api/field_description/', {
                 clickedField: field
             }, {
@@ -158,7 +156,6 @@ const ValidationModal = ({
                 throw new Error('Erro ao buscar descrição do campo');
             }
             const data = response.data;
-            console.log('Field description:', data);
             setFieldDescription(data.fieldDescription);
         } catch (error) {
             console.error('Error fetching field description:', error);
@@ -169,9 +166,16 @@ const ValidationModal = ({
         setSelectedField(null);
         setFieldDescription('');
     };
-    //console.log(userChoices)
+
     return (
-        <StyledValidationModal isOpen={modalIsOpen} onClose={closeModal} title={'Valide seus dados'} subtitle={'Para cada campo da esquerda (modelo de referência), encontre o correspondente no seu modelo de entrada. Caso não encontre correspondência, você pode deixar o campo vazio. Clique sobre os campos de referência para obter maiores informações sobre o tipo de dado.'} primaryButtonLabel={'Enviar'} btnType={'submit'}>
+        <StyledValidationModal
+            isOpen={modalIsOpen}
+            onClose={closeModal}
+            title={'Valide seus dados'}
+            subtitle={'Para cada campo da esquerda (modelo de referência), encontre o correspondente no seu modelo de entrada. Caso não encontre correspondência, você pode deixar o campo vazio. Clique sobre os campos de referência para obter maiores informações sobre o tipo de dado.'}
+            primaryButtonLabel={'Enviar'}
+            btnType={'submit'}
+        >
             {(isFetching || isLoadingUserChoices) ? <Loader /> : (
                 <div className="modal-content">
                     {selectedField && (
@@ -183,14 +187,14 @@ const ValidationModal = ({
                     )}
                     <div className="form-content">
                         <Formik initialValues={{...initialValues, ...(!!userChoices && {...userChoices})}} onSubmit={handleSubmit}>
-                            {({ setFieldValue, values }) => (  //console.log(values),
+                            {({ setFieldValue, values }) => (
                                 <Form id={'validation-form-id'}>
                                     <Slider
                                         totalSlides={defaultList.length}
                                         currentSlide={currentSlide}
                                         setCurrentSlide={(slide) => {
                                             setCurrentSlide(slide);
-                                            setSelectedField(null); // Fecha a janela lateral ao trocar de slide
+                                            setSelectedField(null);
                                         }}
                                         values={values}
                                         userDataId={userDataId}
@@ -232,7 +236,14 @@ const ValidationModal = ({
                                                                 ...parseUserData(field).map(data => ({ value: data, label: data }))
                                                             ]}
                                                             placeholder="Selecione..."
-                                                            onChange={(e) => setFieldValue(`${dl.name}.${field}`, e.value === '' ? null : e.value)} // Definir como null se o valor for uma string vazia
+                                                            onChange={(e) => {
+                                                                if (e && e.value !== undefined) { // Verificar se 'e' não é nulo e possui a propriedade 'value'
+                                                                    setFieldValue(`${dl.name}.${field}`, e.value === '' ? "" : e.value);
+                                                                } else {
+                                                                    setFieldValue(`${dl.name}.${field}`, ""); // Definir como string vazia se o campo for limpo
+                                                                }
+                                                            }}
+                                                            isClearable
                                                             menuPlacement="auto"
                                                             menuPortalTarget={document.body}
                                                             menuPosition="fixed"
@@ -244,7 +255,7 @@ const ValidationModal = ({
                                                                 menuPortal: base => ({ ...base, zIndex: 1050 })
                                                             }}
                                                             {...(!!values[dl.name][field] && { defaultValue: { value: values[dl.name][field], label: values[dl.name][field] } })}
-                                                        />                                                      
+                                                        />                                       
                                                         )}
                                                     </li>
                                                 ))}
@@ -264,3 +275,4 @@ const ValidationModal = ({
 };
 
 export default ValidationModal;
+

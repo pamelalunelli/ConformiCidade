@@ -10,8 +10,9 @@ import ValidationModal from './ValidationModal';
 import ClipLoader from "react-spinners/ClipLoader";
 import { StyledHomePageContainer } from './styles';
 import ERDiagram from '../../../static/images/umlTCC.png';
-import Logo from '../../../static/images/logoSemFundo.png'
+import Logo from '../../../static/images/logoSemFundo.png';
 import { useToken } from '../../TokenContext.js'; // Importe o hook useToken
+import { SearchOutlined } from '@ant-design/icons'; // Importe o ícone de lupa
 
 const fileSchema = (required) => {
   return Yup.mixed().test('csv_arq', 'É necessário fornecer um arquivo', (value) => {
@@ -47,11 +48,11 @@ const HomePageContainer = () => {
 
   const handleSubmit = async (values, { resetForm }) => {
     setIsSubmitting(true);
-  
+
     const formData = new FormData();
     formData.append('csv_arq', values.csv_arq);
     formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
-  
+
     try {
       const response = await axios.post('/api/upload/', formData, {
         headers: {
@@ -60,33 +61,33 @@ const HomePageContainer = () => {
           'Authorization': `Token ${token}`, // Use o token global aqui
         },
       });
-  
+
       if (response.status === 200) {
         console.log('Resposta do envio do arquivo:', response.data); // Verificar a resposta do envio do arquivo
-  
+
         const userDataId = response.data.id;
         setUserDataId(userDataId);
-  
+
         const fieldsCSV = response.data.fields;
         const tableNameCSV = response.data.tableName;
-  
+
         try {
           const matchingTableName = await axios.post(
             `/api/create_matching_table/`,
             tableNameCSV,
             { headers: { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` } }
           );
-  
+
           console.log('Tabela de correspondência criada:', matchingTableName.data); // Verificar se a tabela de correspondência foi criada corretamente
-  
+
           const userDataResponse = await axios.post(
             `/api/populate_matching_fields/`,
             { matchingTableName, fieldsCSV, userDataId },
             { headers: { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` } }
           );
-  
+
           console.log('Dados do usuário recebidos:', userDataResponse.data); // Verificar se os dados do usuário foram recebidos corretamente
-  
+
           setUserData(userDataResponse.data);
           setMatchingTableName(matchingTableName.data);
           openModal();
@@ -102,8 +103,8 @@ const HomePageContainer = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };  
-  
+  };
+
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '10vh' }}>
@@ -115,8 +116,7 @@ const HomePageContainer = () => {
           <StyledHomePageContainer.Paragraph>
             Este validador tem como objetivo auxiliar o mapeamento das entidades presentes nos Cadastros Imobiliários Fiscais dos municípios tendo como base um modelo concebido a partir do segmento fiscal do modelo proposto por Santos (2022)*, <br />
             tese de doutorado que teve como objeto de estudo os Direitos, Restrições e Responsabilidades (RRR) sob o aspecto técnico da ISO 19.152:2012 (Land Administration Domain Model).<br />
-            <br />*Santos, Suzana Daniela da Rocha. Sistematização e Modelagem dos Direitos, Restrições e Responsabilidades no Cadastro Territorial No Contexto Do Sistema De Administração Territorial Brasileiro. <br />Tese (Doutorado em Ciências Geodésicas) - Universidade Federal do Paraná. Curitiba, 2022.
-            
+            <br />*Santos, Suzana Daniela da Rocha. Sistematização e Modelagem dos Direitos, Restrições e Responsabilidades no Cadastro Territorial No Contexto Do Sistema De Administração Territorial Brasileiro. <br />Tese (Doutorado em Ciências Geodésicas) - Universidade Federal do Paraná. Curitiba, 2022.<br />
           </StyledHomePageContainer.Paragraph>
         </div>
         <StyledHomePageContainer.Reference>
@@ -133,16 +133,16 @@ const HomePageContainer = () => {
               <a href={ERDiagram} target="_blank" rel="noopener noreferrer">
                 <img src={ERDiagram} alt="Diagrama Entidade-Relacionamento" height="200" />
               </a>
-              <StyledHomePageContainer.Paragraph>
-                Clique na imagem para <br /> ampliar o diagrama
-              </StyledHomePageContainer.Paragraph>
+              <StyledHomePageContainer.ImageFooter>
+                Clique na imagem para ampliar o diagrama <SearchOutlined />
+              </StyledHomePageContainer.ImageFooter>
             </div>
           </StyledHomePageContainer>
         </StyledHomePageContainer.Reference>
         <Formik initialValues={{fileName: '', csv_arq: null}}
                 validationSchema={schema}
                 onSubmit={handleSubmit}>
-          {({erros, isValid, dirty, setFieldValue}) => (
+          {({errors, isValid, dirty, setFieldValue}) => (
             <StyledHomePageContainer.Form>
               <Field label='Dê um nome para seu arquivo (opcional)'
                       id='file-name-id'
