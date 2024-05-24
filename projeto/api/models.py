@@ -13,80 +13,6 @@ class FieldMatching(models.Model):
     tableName = models.CharField(max_length=255)
     timestamp = models.DateTimeField(auto_now_add=True)
     matchingTableName = models.CharField(max_length=255, null=True)
-    
-    #class Meta:
-    #    unique_together = ['usuario', 'nome_campo_entrada']
-        
-class BR_CaracteristicasEdificacao(models.Model):
-    status = models.IntegerField(null=True)
-    tipologia = models.IntegerField(null=True)
-    elevador = models.BooleanField()
-    posicao = models.IntegerField(null=True)
-    conservacao = models.IntegerField(null=True)
-    orientacao = models.IntegerField(null=True)
-    esquadria = models.IntegerField(null=True)
-    estrutura = models.IntegerField(null=True)
-    acabamento = models.IntegerField(null=True)
-    utilizacao = models.IntegerField(null=True)
-    utilizacaoSecundaria = models.IntegerField(null=True)
-    condicao = models.IntegerField(null=True)
-
-class BR_ImovelCadastral(models.Model):
-    matriculaImobiliaria_IC = models.IntegerField(null=True)
-    inscricaoImobiliaria = models.IntegerField(null=True)
-    idCadastro_IC = models.IntegerField(null=True)
-    areaTerreno = models.FloatField()
-    tipoImovel = models.IntegerField(null=True)
-
-class BR_ImovelCondominio(models.Model):
-    areaTotalTerreno = models.FloatField()
-    areaTotalTerreno_privativa = models.FloatField()
-    areaTotalTerreno_comum = models.FloatField()
-    areaTotalConstruida = models.FloatField()
-    areaTotalConstruida_privada = models.FloatField()
-    areaTotalConstruida_comum = models.FloatField()
-    numCasas = models.IntegerField(null=True)
-    numTorres = models.IntegerField(null=True)
-    totalUnidadesPrivativas = models.IntegerField(null=True)
-
-class BR_ImovelLegal(models.Model):
-    cod_ORIP = models.IntegerField(null=True)
-    matricula = models.IntegerField(null=True) 
-    descricaoImovel = models.CharField(max_length=1000, null=True, blank=True)
-    classesUsoSoloReg = models.IntegerField(null=True)
-    inscricaoImob = models.IntegerField(null=True)
-    idCadastro_IL = models.IntegerField(null=True)
-    dataAbertura = models.DateField()
-    matriculaOrigem = models.IntegerField(null=True) 
-    matriculaNova = models.IntegerField(null=True) 
-    valorImovel = models.FloatField()
-
-class BR_Logradouro(models.Model):
-    tipoLogradouro_Log = models.IntegerField(null=True) 
-    nomeAnterior = models.CharField(max_length=100, null=True, blank=True)
-    nomeLogradouro_Log = models.CharField(max_length=100, null=True, blank=True)
-    cep_Log = models.IntegerField(null=True) 
-    atoCriacao = models.CharField(max_length=100, null=True, blank=True)
-    dataCriacao = models.DateField()
-
-class BR_Parcela(models.Model):
-    idLote = models.IntegerField(null=True) 
-    limitacao = models.IntegerField(null=True) 
-    tipoTopografia = models.IntegerField(null=True) 
-    numVagasCobertas = models.IntegerField(null=True) 
-    situacao = models.IntegerField(null=True) 
-    adequacaoOcupacao = models.IntegerField(null=True) 
-    nivelamento = models.IntegerField(null=True) 
-
-class Endereco(models.Model):
-    tipoLogradour_End = models.IntegerField(null=True) 
-    nomeLogradouro_End = models.CharField(max_length=100, null=True, blank=True)
-    numero = models.IntegerField(null=True)
-    complemento = models.CharField(max_length=100, null=True, blank=True)
-    bairro = models.CharField(max_length=50, null=True, blank=True)
-    cidade = models.CharField(max_length=50, null=True, blank=True)
-    estado = models.CharField(max_length=50, null=True, blank=True)
-    cep_End =  models.IntegerField(null=True)
 
 class ModeloDinamico(models.Model):
     iduser = models.IntegerField(null=True)
@@ -117,3 +43,136 @@ class CustomUser(AbstractUser):
         verbose_name=_('user permissions'),
         blank=True,
     )
+
+class BR_CaracteristicasTerreno(models.Model):
+    id = models.AutoField(primary_key=True)
+    areaTotalTerreno = models.FloatField(null=True, blank=True)
+    areaTotalTerreno_privativa = models.FloatField(null=True, blank=True)
+    areaTotalTerreno_comum = models.FloatField(null=True, blank=True)
+    areaTotalConstruida = models.FloatField(null=True, blank=True)
+    areaTotalConstruida_privada = models.FloatField(null=True, blank=True)
+    areaTotalConstruida_comum = models.FloatField(null=True, blank=True)
+    numCasas = models.IntegerField(null=True, blank=True)
+    numTorres = models.IntegerField(null=True, blank=True)
+    totalUnidadesPrivativas = models.IntegerField(null=True, blank=True)
+    limitacao = models.CharField(max_length=255, null=True, blank=True)
+    topografia = models.CharField(max_length=255, null=True, blank=True)
+    situacao = models.CharField(max_length=255, null=True, blank=True)
+    numVagas = models.IntegerField(null=True, blank=True)
+    nivelamento = models.CharField(max_length=255, null=True, blank=True)
+
+class BR_CaracteristicasEdificacao(models.Model):
+    id = models.AutoField(primary_key=True)
+    area = models.FloatField(null=True, blank=True)
+    status = models.CharField(max_length=255, null=True, blank=True)
+    tipologia = models.CharField(max_length=255, null=True, blank=True)
+    elevador = models.BooleanField(default=False)  # Assume-se que o padrão é False
+    posicao = models.CharField(max_length=255, null=True, blank=True)
+    conservacao = models.CharField(max_length=255, null=True, blank=True)
+    orientacao = models.CharField(max_length=255, null=True, blank=True)
+    esquadria = models.CharField(max_length=255, null=True, blank=True)
+    estrutura = models.CharField(max_length=255, null=True, blank=True)
+    acabamento = models.CharField(max_length=255, null=True, blank=True)
+    utilizacao = models.CharField(max_length=255, null=True, blank=True)
+    utilizacaoSecundaria = models.CharField(max_length=255, null=True, blank=True)
+    condicao = models.CharField(max_length=255, null=True, blank=True)
+    cobertura = models.CharField(max_length=255, null=True, blank=True)
+
+class BR_Infraestrutura(models.Model):
+    id = models.AutoField(primary_key=True)
+    energiaEletrica = models.BooleanField(default=False)
+    abastecimentoAgua = models.BooleanField(default=False)
+    iluminacaoPublica = models.BooleanField(default=False)
+    esgoto = models.BooleanField(default=False)
+    coletaLixo = models.BooleanField(default=False)
+    pavimentacao = models.BooleanField(default=False)
+    telefonia = models.BooleanField(default=False)
+    arborizacao = models.BooleanField(default=False)
+    passeio = models.BooleanField(default=False)
+    drenagemPluvial = models.BooleanField(default=False)
+
+class BR_Tributo(models.Model):
+    id = models.AutoField(primary_key=True)
+    valorVenal = models.FloatField(null=True, blank=True)
+    IPTU = models.FloatField(null=True, blank=True)
+    isencaoIPTU = models.BooleanField(default=False)
+    fatorTerreno = models.FloatField(null=True, blank=True)
+
+class BR_TrechoLogradouro(models.Model):
+    id = models.AutoField(primary_key=True)
+    codigo = models.CharField(max_length=255, null=True, blank=True)
+    valor = models.FloatField(null=True, blank=True)
+
+class BR_EnderecoImovel(models.Model):
+    id = models.AutoField(primary_key=True)
+    numero = models.CharField(max_length=10, null=True, blank=True)
+    complemento = models.CharField(max_length=255, null=True, blank=True)
+    bairro = models.CharField(max_length=255, null=True, blank=True)
+    cep = models.CharField(max_length=20, null=True, blank=True)
+
+class BR_EnderecoCorrespondencia(models.Model):
+    id = models.AutoField(primary_key=True)
+    tipoLogradouro = models.CharField(max_length=255, null=True, blank=True)
+    nomeLogradouro = models.CharField(max_length=255, null=True, blank=True)
+    numero = models.CharField(max_length=10, null=True, blank=True)
+    complemento = models.CharField(max_length=255, null=True, blank=True)
+    bairro = models.CharField(max_length=255, null=True, blank=True)
+    municipio = models.CharField(max_length=255, null=True, blank=True)
+    UF = models.CharField(max_length=2, null=True, blank=True)
+    CEP = models.CharField(max_length=20, null=True, blank=True)
+    classificacao = models.CharField(max_length=255, null=True, blank=True)
+
+class BR_PessoaJuridica(models.Model):
+    id = models.AutoField(primary_key=True)
+    nomeFantasia = models.CharField(max_length=255, null=True, blank=True)
+    razaoSocial = models.CharField(max_length=255, null=True, blank=True)
+
+class BR_PessoaFisica(models.Model):
+    id = models.AutoField(primary_key=True)
+    estadoCivil = models.CharField(max_length=255, null=True, blank=True)
+    nome = models.CharField(max_length=255, null=True, blank=True)
+
+class BR_ContatoPessoa(models.Model):
+    id = models.AutoField(primary_key=True)
+    telefone = models.CharField(max_length=20, null=True, blank=True)
+    celular = models.CharField(max_length=20, null=True, blank=True)
+    email = models.EmailField(null=True, blank=True)
+
+class BR_DocumentoPessoa(models.Model):
+    id = models.AutoField(primary_key=True)
+    documento = models.CharField(max_length=255, null=True, blank=True)
+    numeroDocumento = models.CharField(max_length=255, null=True, blank=True)
+
+class BR_Pessoa(models.Model):
+    id = models.AutoField(primary_key=True)
+    tipoPessoa = models.CharField(max_length=255, null=True, blank=True)
+    codContribuinte = models.CharField(max_length=255, null=True, blank=True)
+    papel = models.CharField(max_length=255, null=True, blank=True)
+    fk_pessoaFisica = models.OneToOneField(BR_PessoaFisica, on_delete=models.CASCADE, null=True, blank=True)
+    fk_pessoaJuridica = models.OneToOneField(BR_PessoaJuridica, on_delete=models.CASCADE, null=True, blank=True)
+    fk_contatoPessoa = models.ForeignKey(BR_ContatoPessoa, on_delete=models.CASCADE, null=True, blank=True)
+    fk_documentoPessoa = models.ForeignKey(BR_DocumentoPessoa, on_delete=models.CASCADE, null=True, blank=True)
+
+class BR_ImovelFiscal(models.Model):
+    id = models.AutoField(primary_key=True)
+    inscricaoImobiliaria = models.CharField(max_length=255)
+    matriculaImobiliaria = models.CharField(max_length=255)
+    descricaoImovel = models.TextField(null=True, blank=True)
+    dataCriacao = models.DateField(null=True, blank=True)
+    inscricaoAnterior = models.CharField(max_length=255, null=True, blank=True)
+    loteamento = models.CharField(max_length=255, null=True, blank=True)
+    distrito = models.CharField(max_length=255, null=True, blank=True)
+    setor = models.CharField(max_length=255, null=True, blank=True)
+    quadra = models.CharField(max_length=255, null=True, blank=True)
+    lote = models.CharField(max_length=255, null=True, blank=True)
+    unidade = models.CharField(max_length=255, null=True, blank=True)
+    testada = models.IntegerField(null=True, blank=True)
+    fk_caracteristicasTerreno = models.ForeignKey(BR_CaracteristicasTerreno, on_delete=models.CASCADE, null=True, blank=True)
+    fk_caracteristicasEdificacao = models.ForeignKey(BR_CaracteristicasEdificacao, on_delete=models.CASCADE, null=True, blank=True)
+    fk_enderecoImovel = models.ForeignKey(BR_EnderecoImovel, on_delete=models.CASCADE, null=True, blank=True)
+    fk_infraestrutura = models.ForeignKey(BR_Infraestrutura, on_delete=models.CASCADE, null=True, blank=True)
+    fk_tributo = models.ForeignKey(BR_Tributo, on_delete=models.CASCADE, null=True, blank=True)
+    fk_trechoLogradouro = models.ForeignKey(BR_TrechoLogradouro, on_delete=models.CASCADE, null=True, blank=True)
+    fk_pessoa = models.ManyToManyField(BR_Pessoa)
+
+
