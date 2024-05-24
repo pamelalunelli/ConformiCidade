@@ -4,7 +4,7 @@ import Loader from '../../library/loader/index.js';
 import { useToken } from '../../../TokenContext.js';
 import { StyledMatchingsNotConcludedTable } from './styles.js';
 import ValidationModal from '../ValidationModal';
-import axios from 'axios'; // Importe o axios se ainda não estiver importado
+import axios from 'axios';
 
 const MatchingsNotConcluded = () => {
     const { token } = useToken();
@@ -17,39 +17,44 @@ const MatchingsNotConcluded = () => {
     const [matchingTableName, setMatchingTableName] = useState('');
 
     useEffect(() => {
-        fetchObjetos();
-    }, []);
+        const fetchData = async () => {
+            try {
+                const response = await fetch('/api/unfinished_matching/', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Token ${token}`
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error(`Erro ao buscar objetos: ${response.statusText}`);
+                }
+                const data = await response.json();
+                setHistoric(data);
+            } catch (error) {
+                toast.error(error.message);
+            } finally {
+                setIsFetching(false);
+            }
+        };
+
+        // Inicia a busca de dados imediatamente
+        fetchData();
+
+        // Configura o intervalo para buscar dados a cada segundo
+        const intervalId = setInterval(fetchData, 2000);
+
+        // Limpa o intervalo quando o componente é desmontado
+        return () => clearInterval(intervalId);
+    }, [token]); // Chama o useEffect sempre que o token é atualizado
 
     const openModal = () => setIsOpen(true);
     const closeModal = () => setIsOpen(false);
-
-    const fetchObjetos = async () => {
-        try {
-            const response = await fetch('/api/unfinished_matching/', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Token ${token}`
-                }
-            });
-            if (!response.ok) {
-                throw new Error(`Erro ao buscar objetos: ${response.statusText}`);
-            }
-            const data = await response.json();
-            setHistoric(data);
-        } catch (error) {
-            toast.error(error.message);
-        } finally {
-            setIsFetching(false);
-        }
-    };   
 
     const handleRowClick = async (clickedIdUser, clickedId, clickedMatchingTableName) => {
         try {
             setIdUser(clickedIdUser);
             setId(clickedId);
             setMatchingTableName(clickedMatchingTableName);
-
-            // Abra a modal com a propriedade isOpenFromMatchings
             setIsOpen(true);
 
             const savedUserDataResponse = await axios.post(
@@ -57,18 +62,18 @@ const MatchingsNotConcluded = () => {
                 { matchingTableName: clickedMatchingTableName },
                 { 
                     headers: { 
-                        'Authorization': `Token ${token}`, // Adicionando o token aqui
+                        'Authorization': `Token ${token}`,
                         'Content-Type': 'application/json' 
                     } 
                 }
             );
-            
+
             setUserData(savedUserDataResponse.data);
 
             const autosavedFieldsResponse = await fetch('/api/identifying_autosaved_fields/', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Token ${token}`, // Adicionando o token aqui
+                    'Authorization': `Token ${token}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
@@ -124,7 +129,7 @@ const MatchingsNotConcluded = () => {
                             userData={userData}
                             userDataId={id}
                             matchingTableName={matchingTableName}
-                            isOpenFromMatchings={true} // Adicione a propriedade isOpenFromMatchings
+                            isOpenFromMatchings={true}
                         />
                     )}
                 </>
