@@ -11,8 +11,8 @@ import ClipLoader from "react-spinners/ClipLoader";
 import { StyledHomePageContainer } from './styles';
 import ERDiagram from '../../../static/images/umlTCC.png';
 import Logo from '../../../static/images/logoSemFundo.png';
-import { useToken } from '../../TokenContext.js'; // Importe o hook useToken
-import { SearchOutlined } from '@ant-design/icons'; // Importe o ícone de lupa
+import { useToken } from '../../TokenContext.js'; 
+import { SearchOutlined } from '@ant-design/icons';
 
 const fileSchema = (required) => {
   return Yup.mixed().test('csv_arq', 'É necessário fornecer um arquivo', (value) => {
@@ -29,14 +29,14 @@ const schema = Yup.object().shape({
 });
 
 const HomePageContainer = () => {
-  const { token } = useToken(); // Use o hook useToken para acessar o token global
+  const { token } = useToken();
 
   const [modalIsOpen, setIsOpen] = useState(false);
   const [userData, setUserData] = useState(null);
   const [csrfToken, setCsrfToken] = useState('');
   const [userDataId, setUserDataId] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false); // State for spinner visibility
-  const [matchingTableName, setMatchingTableName] = useState(''); // State to store matchingTableName
+  const [isSubmitting, setIsSubmitting] = useState(false); 
+  const [matchingTableName, setMatchingTableName] = useState(''); 
 
   useEffect(() => {
     const csrftoken = getCookie('csrftoken');
@@ -58,12 +58,12 @@ const HomePageContainer = () => {
         headers: {
           'Content-Type': 'multipart/form-data',
           'X-CSRFToken': getCookie('csrftoken'),
-          'Authorization': `Token ${token}`, // Use o token global aqui
+          'Authorization': `Token ${token}`,
         },
       });
 
       if (response.status === 200) {
-        console.log('Resposta do envio do arquivo:', response.data); // Verificar a resposta do envio do arquivo
+        console.log('Resposta do envio do arquivo:', response.data); 
 
         const userDataId = response.data.id;
         setUserDataId(userDataId);
@@ -78,7 +78,7 @@ const HomePageContainer = () => {
             { headers: { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` } }
           );
 
-          console.log('Tabela de correspondência criada:', matchingTableName.data); // Verificar se a tabela de correspondência foi criada corretamente
+          console.log('Tabela de correspondência criada:', matchingTableName.data); 
 
           const userDataResponse = await axios.post(
             `/api/populate_matching_fields/`,
@@ -86,7 +86,7 @@ const HomePageContainer = () => {
             { headers: { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` } }
           );
 
-          console.log('Dados do usuário recebidos:', userDataResponse.data); // Verificar se os dados do usuário foram recebidos corretamente
+          console.log('Dados do usuário recebidos:', userDataResponse.data); 
 
           setUserData(userDataResponse.data);
           setMatchingTableName(matchingTableName.data);
@@ -159,9 +159,9 @@ const HomePageContainer = () => {
                       as={InputFile}/>
               <StyledHomePageContainer.Form.Submit type='submit' disabled={!isValid || isSubmitting || !dirty}>
                 {isSubmitting ? (
-                  <ClipLoader // Use the ClipLoader component
-                    size={35} // Adjust size as needed
-                    color={'#ffffff'} // Customize color
+                  <ClipLoader 
+                    size={35} 
+                    color={'#ffffff'} 
                   />
                 ) : (
                   <span>Enviar</span>

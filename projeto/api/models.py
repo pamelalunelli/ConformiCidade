@@ -66,7 +66,7 @@ class BR_CaracteristicasEdificacao(models.Model):
     area = models.FloatField(null=True, blank=True)
     status = models.CharField(max_length=255, null=True, blank=True)
     tipologia = models.CharField(max_length=255, null=True, blank=True)
-    elevador = models.BooleanField(default=False)  # Assume-se que o padrão é False
+    elevador = models.BooleanField(default=False)
     posicao = models.CharField(max_length=255, null=True, blank=True)
     conservacao = models.CharField(max_length=255, null=True, blank=True)
     orientacao = models.CharField(max_length=255, null=True, blank=True)
@@ -105,22 +105,22 @@ class BR_TrechoLogradouro(models.Model):
 
 class BR_EnderecoImovel(models.Model):
     id = models.AutoField(primary_key=True)
-    numero = models.CharField(max_length=10, null=True, blank=True)
-    complemento = models.CharField(max_length=255, null=True, blank=True)
-    bairro = models.CharField(max_length=255, null=True, blank=True)
-    cep = models.CharField(max_length=20, null=True, blank=True)
+    numero_imovel = models.CharField(max_length=10, null=True, blank=True)
+    complemento_imovel = models.CharField(max_length=255, null=True, blank=True)
+    bairro_imovel = models.CharField(max_length=255, null=True, blank=True)
+    cep_imovel = models.CharField(max_length=20, null=True, blank=True)
 
 class BR_EnderecoCorrespondencia(models.Model):
     id = models.AutoField(primary_key=True)
-    tipoLogradouro = models.CharField(max_length=255, null=True, blank=True)
-    nomeLogradouro = models.CharField(max_length=255, null=True, blank=True)
-    numero = models.CharField(max_length=10, null=True, blank=True)
-    complemento = models.CharField(max_length=255, null=True, blank=True)
-    bairro = models.CharField(max_length=255, null=True, blank=True)
-    municipio = models.CharField(max_length=255, null=True, blank=True)
-    UF = models.CharField(max_length=2, null=True, blank=True)
-    CEP = models.CharField(max_length=20, null=True, blank=True)
-    classificacao = models.CharField(max_length=255, null=True, blank=True)
+    tipoLogradouro_correspondencia = models.CharField(max_length=255, null=True, blank=True)
+    nomeLogradouro_correspondencia = models.CharField(max_length=255, null=True, blank=True)
+    numero_correspondencia = models.CharField(max_length=10, null=True, blank=True)
+    complemento_correspondencia = models.CharField(max_length=255, null=True, blank=True)
+    bairro_correspondencia = models.CharField(max_length=255, null=True, blank=True)
+    municipio_correspondencia = models.CharField(max_length=255, null=True, blank=True)
+    UF_correspondencia = models.CharField(max_length=2, null=True, blank=True)
+    CEP_correspondencia = models.CharField(max_length=20, null=True, blank=True)
+    classificacao_correspondencia = models.CharField(max_length=255, null=True, blank=True)
 
 class BR_PessoaJuridica(models.Model):
     id = models.AutoField(primary_key=True)
@@ -152,6 +152,7 @@ class BR_Pessoa(models.Model):
     fk_pessoaJuridica = models.OneToOneField(BR_PessoaJuridica, on_delete=models.CASCADE, null=True, blank=True)
     fk_contatoPessoa = models.ForeignKey(BR_ContatoPessoa, on_delete=models.CASCADE, null=True, blank=True)
     fk_documentoPessoa = models.ForeignKey(BR_DocumentoPessoa, on_delete=models.CASCADE, null=True, blank=True)
+    fk_enderecoCorrespondencia = models.ForeignKey(BR_EnderecoCorrespondencia, on_delete=models.CASCADE, null=True, blank=True)
 
 class BR_ImovelFiscal(models.Model):
     id = models.AutoField(primary_key=True)

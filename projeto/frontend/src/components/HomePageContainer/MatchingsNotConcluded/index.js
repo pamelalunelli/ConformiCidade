@@ -37,15 +37,12 @@ const MatchingsNotConcluded = () => {
             }
         };
 
-        // Inicia a busca de dados imediatamente
         fetchData();
 
-        // Configura o intervalo para buscar dados a cada segundo
         const intervalId = setInterval(fetchData, 2000);
 
-        // Limpa o intervalo quando o componente é desmontado
         return () => clearInterval(intervalId);
-    }, [token]); // Chama o useEffect sempre que o token é atualizado
+    }, [token]); 
 
     const openModal = () => setIsOpen(true);
     const closeModal = () => setIsOpen(false);

@@ -7,6 +7,7 @@ import pandas as pd
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view, permission_classes
 from django.utils.decorators import method_decorator
+from datetime import datetime
 
 @csrf_exempt
 def createMatchingTable(request):
@@ -29,40 +30,40 @@ def createMatchingTable(request):
                     inputField VARCHAR(255),
                     referenceField VARCHAR(255),
                     modelName VARCHAR(255),
-                    --editBased_hamming FLOAT DEFAULT 0.0,
-                    --editBased_mlipns FLOAT DEFAULT 0.0,
+                    editBased_hamming FLOAT DEFAULT 0.0,
+                    editBased_mlipns FLOAT DEFAULT 0.0,
                     editBased_levenshtein FLOAT DEFAULT 0.0,
-                    --editBased_dameraulevenshtein FLOAT DEFAULT 0.0,
-                    --editBased_jarowinkler FLOAT DEFAULT 0.0,
-                    --editBased_strcmp95 FLOAT DEFAULT 0.0,
-                    --editBased_needlemanwunsch FLOAT DEFAULT 0.0,
-                    --editBased_gotoh FLOAT DEFAULT 0.0,
-                    --editBased_smithwaterman FLOAT DEFAULT 0.0,
-                    --tokenBased_jaccardindex FLOAT DEFAULT 0.0,
-                    --tokenBased_sørensendicecoefficient FLOAT DEFAULT 0.0,
-                    --tokenBased_tverskyindex FLOAT DEFAULT 0.0,
-                    --tokenBased_overlapcoefficient FLOAT DEFAULT 0.0,
-                    --tokenBased_cosinesimilarity FLOAT DEFAULT 0.0,
-                    --tokenBased_mongeelkan FLOAT DEFAULT 0.0,
-                    --tokenBased_bagdistance FLOAT DEFAULT 0.0,
-                    --sequenceBased_lcsseq FLOAT DEFAULT 0.0,
+                    editBased_dameraulevenshtein FLOAT DEFAULT 0.0,
+                    editBased_jarowinkler FLOAT DEFAULT 0.0,
+                    editBased_strcmp95 FLOAT DEFAULT 0.0,
+                    editBased_needlemanwunsch FLOAT DEFAULT 0.0,
+                    editBased_gotoh FLOAT DEFAULT 0.0,
+                    editBased_smithwaterman FLOAT DEFAULT 0.0,
+                    tokenBased_jaccardindex FLOAT DEFAULT 0.0,
+                    tokenBased_sørensendicecoefficient FLOAT DEFAULT 0.0,
+                    tokenBased_tverskyindex FLOAT DEFAULT 0.0,
+                    tokenBased_overlapcoefficient FLOAT DEFAULT 0.0,
+                    tokenBased_cosinesimilarity FLOAT DEFAULT 0.0,
+                    tokenBased_mongeelkan FLOAT DEFAULT 0.0,
+                    tokenBased_bagdistance FLOAT DEFAULT 0.0,
+                    sequenceBased_lcsseq FLOAT DEFAULT 0.0,
                     sequenceBased_lcsstr FLOAT DEFAULT 0.0,
-                    --sequenceBased_ratcliffobershelpsimilarity FLOAT DEFAULT 0.0,
-                    --compressionBased_arithmeticcoding FLOAT DEFAULT 0.0,
-                    --compressionBased_rle FLOAT DEFAULT 0.0,
-                    --compressionBased_bwtrle FLOAT DEFAULT 0.0,
-                    --compressionBased_squareroot FLOAT DEFAULT 0.0,
-                    --compressionBased_entropy FLOAT DEFAULT 0.0,
-                    --compressionBased_bz2 FLOAT DEFAULT 0.0,
-                    --compressionBased_lzma FLOAT DEFAULT 0.0,
-                    --compressionBased_zlib FLOAT DEFAULT 0.0,
-                    --phonetic_mra FLOAT DEFAULT 0.0,
-                    --phonetic_editex FLOAT DEFAULT 0.0,
-                    --simple_prefix FLOAT DEFAULT 0.0,
-                    --simple_postfix FLOAT DEFAULT 0.0,
-                    --simple_length FLOAT DEFAULT 0.0,
-                    --simple_identity FLOAT DEFAULT 0.0,
-                    --simple_matrix FLOAT DEFAULT 0.0,
+                    sequenceBased_ratcliffobershelpsimilarity FLOAT DEFAULT 0.0,
+                    compressionBased_arithmeticcoding FLOAT DEFAULT 0.0,
+                    compressionBased_rle FLOAT DEFAULT 0.0,
+                    compressionBased_bwtrle FLOAT DEFAULT 0.0,
+                    compressionBased_squareroot FLOAT DEFAULT 0.0,
+                    compressionBased_entropy FLOAT DEFAULT 0.0,
+                    compressionBased_bz2 FLOAT DEFAULT 0.0,
+                    compressionBased_lzma FLOAT DEFAULT 0.0,
+                    compressionBased_zlib FLOAT DEFAULT 0.0,
+                    phonetic_mra FLOAT DEFAULT 0.0,
+                    phonetic_editex FLOAT DEFAULT 0.0,
+                    simple_prefix FLOAT DEFAULT 0.0,
+                    simple_postfix FLOAT DEFAULT 0.0,
+                    simple_length FLOAT DEFAULT 0.0,
+                    simple_identity FLOAT DEFAULT 0.0,
+                    simple_matrix FLOAT DEFAULT 0.0,
                     generalindex FLOAT DEFAULT 0.0,
                     userChoice BOOLEAN DEFAULT FALSE,
                     tableName VARCHAR(255)
@@ -140,8 +141,8 @@ def calculatingSimilarity(tableName):
             # Cálculo dos índices de similaridade
             #editBasedHamming = td.hamming.normalized_similarity(inputFieldDB, referenceFieldDB)
             #editBasedMLIPNS = td.mlipns.normalized_similarity(inputFieldDB, referenceFieldDB)
-            editBasedLevenshtein = td.levenshtein.normalized_similarity(inputFieldDB, referenceFieldDB)
-            #editBasedDamerauLevenshtein = td.damerau_levenshtein.normalized_similarity(inputFieldDB, referenceFieldDB)
+            #editBasedLevenshtein = td.levenshtein.normalized_similarity(inputFieldDB, referenceFieldDB)
+            editBasedDamerauLevenshtein = td.damerau_levenshtein.normalized_similarity(inputFieldDB, referenceFieldDB)
             #editBasedJaroWinkler = td.jaro_winkler.normalized_similarity(inputFieldDB, referenceFieldDB)
             #editBasedStrcmp95 = td.strcmp95.normalized_similarity(inputFieldDB, referenceFieldDB)
             #editBasedNeedlemanWunsch = td.needleman_wunsch.normalized_similarity(inputFieldDB, referenceFieldDB)
@@ -156,7 +157,7 @@ def calculatingSimilarity(tableName):
             #tokenMongeElkan = td.monge_elkan.normalized_similarity(inputFieldDB, referenceFieldDB)
             #tokenBagDistance = td.bag.normalized_similarity(inputFieldDB, referenceFieldDB)
             #sequenceBasedLCSSeq = td.lcsseq.normalized_similarity(inputFieldDB, referenceFieldDB)
-            sequenceBasedLCSStr = td.lcsstr.normalized_similarity(inputFieldDB, referenceFieldDB)
+            #sequenceBasedLCSStr = td.lcsstr.normalized_similarity(inputFieldDB, referenceFieldDB)
             #sequenceBasedRatcliffObershelpSimilarity = td.ratcliff_obershelp.normalized_similarity(inputFieldDB, referenceFieldDB)
             #compressionBasedArithmeticcoding = td.arith_ncd.normalized_similarity(inputFieldDB, referenceFieldDB)
             #compressionBasedRLE = td.rle_ncd.normalized_similarity(inputFieldDB, referenceFieldDB)
@@ -174,14 +175,13 @@ def calculatingSimilarity(tableName):
             #simpleIdentity = td.identity.normalized_similarity(inputFieldDB, referenceFieldDB)
             #simpleMatrix = td.matrix.normalized_similarity(inputFieldDB, referenceFieldDB)
             #generalIndex = (editBasedHamming*0.25)  + (editBasedLevenshtein*0.25) + (simplePrefix*0.5)
-            generalIndex = (editBasedLevenshtein + sequenceBasedLCSStr)/2
+            generalIndex = (editBasedDamerauLevenshtein)
             userChoice = False
 
             cursor.execute(f"""
                             UPDATE {tableName}
                             SET 
-                                editBased_levenshtein = {editBasedLevenshtein}, 
-                                sequenceBased_lcsstr = {sequenceBasedLCSStr},
+                                editBased_levenshtein = {editBasedDamerauLevenshtein},
                                 generalindex = {generalIndex},
                                 userChoice = 'False'
                             WHERE 
@@ -228,12 +228,6 @@ def findMostProbableReferences(tableName, topN=5):
         mostProbableReferences[referencefield] = combinedReferences
 
     return json.dumps(mostProbableReferences, indent=4)
-
-    #if tiver pelo menos um campo userChoice verdadeiro:
-    #    lógica para o front pegar essas opções que o usuário já escolheu (inputField) e colocar como valor pré-selecionado no select (usando referencefield
-    #     e modelName como referencia)
-    #    e para os campos que estejam com false (usando referencefield e modelName como referencia), deve manter a ordem calculada aqui no 
-    #    início desse método)
 
 api_view(['POST'])
 @csrf_exempt

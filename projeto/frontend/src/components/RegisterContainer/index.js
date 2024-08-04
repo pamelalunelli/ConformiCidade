@@ -9,7 +9,7 @@ import { Eye, EyeSlash, AngleLeft } from '../library/icons'
 import { Field } from '../library/inputs'
 import { NoBgButton } from '../library/buttons'
 import { StyledRegisterContainer } from './styles'
-import Logo from '../../../static/images/logoSemFundo.png'; // Importe sua logo
+import Logo from '../../../static/images/logoSemFundo.png';
 
 const RegisterContainer = () => {
     const paths = usePaths()

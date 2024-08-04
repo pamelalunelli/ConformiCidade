@@ -3,5 +3,7 @@
     "python.createEnvironment.trigger": "prompt",
     "python.terminal.activateEnvironment": false,
     "python.envFile": "",
-    "python.globalModuleInstallation": false
+    "python.globalModuleInstallation": false,
+    "appService.defaultWebAppToDeploy": "/subscriptions/98b2d51c-b2fa-4ea3-8d20-04d124ec04dc/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/sites/conformicidade",
+    "appService.deploySubpath": "."
 }

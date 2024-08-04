@@ -25,7 +25,5 @@ urlpatterns = [
     path('download_pdf/<int:pdf_id>/', views.downloadPdf, name='download_pdf'),
     path('check_availability/', views.CheckAvailabilityView.as_view(), name='check_availability'),
     path('register/', views.RegisterView.as_view(), name='register'),
-    #path('login/', obtain_auth_token, name='login'),
     path('login/', views.login, name='login'),
-    path('minha_view/', views.minha_view, name='minhaView'),
 ]

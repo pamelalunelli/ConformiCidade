@@ -54,7 +54,6 @@ def uploadFile(request):
                 try:
                     iduser_id = CustomUser.objects.get(username=request.user).id
                 except CustomUser.DoesNotExist:
-                    # Lidar com o caso em que o usuário não é encontrado
                     iduser_id = None
 
                 arquivo_csv = form.cleaned_data['csv_arq']
@@ -87,13 +86,10 @@ def uploadFile(request):
                 modelo_dinamico = ModeloDinamico.objects.create(nome=nome_arquivo)
                 id = modelo_dinamico.id
 
-                # Convertendo os dados em JSON
                 dados_json = json.dumps(dados_com_cabecalho)
 
-                # Salvando os dados JSON no objeto modelo_dinamico
                 modelo_dinamico.dataJSON = dados_json
 
-                # Salvando os dados CSV no objeto modelo_dinamico
                 modelo_dinamico.dataCSV = '\n'.join(arquivo_formatado)
 
                 modelo_dinamico.iduser = iduser_id
@@ -116,7 +112,6 @@ def uploadFile(request):
         return JsonResponse({'error': 'Método não permitido'}, status=405)
 
 @csrf_exempt
-#def createTable(tabela_nome, campos_renomeados, dados_csv, iduserdata):
 def createTable(tabela_nome, campos_renomeados, dados_csv):
     with connection.cursor() as cursor:
         cursor.execute(f"DROP TABLE IF EXISTS {tabela_nome}")
@@ -150,7 +145,6 @@ def createTable(tabela_nome, campos_renomeados, dados_csv):
 
         values = []
         for linha in dados_csv:
-            #linha_valores = [iduserdata] + linha
             linha_valores = linha
             values.append(linha_valores)
 
@@ -229,7 +223,6 @@ def autosaveForm(request):
             userId = CustomUser.objects.get(username=request.user).id
 
             with connection.cursor() as cursor:
-                # Consulta para obter o nome da tabela
                 sql = """
                     SELECT api_modelodinamico."matchingTableName"
                     FROM api_modelodinamico 
@@ -260,7 +253,6 @@ def autosaveForm(request):
                                         SET userChoice = FALSE
                                         WHERE referencefield = %s AND inputfield = %s AND iduserdata = %s
                                     """
-                                    #print(f"SQL False: {sql_false} - Values: [{referenceFieldTest}, {previous_input_field}, {idDinamicModel}]")
                                     inner_cursor.execute(sql_false, [referenceFieldTest, previous_input_field, idDinamicModel])
                                 
                                 sql_true = f"""
@@ -268,7 +260,6 @@ def autosaveForm(request):
                                     SET userChoice = TRUE
                                     WHERE referencefield = %s AND inputfield = %s AND iduserdata = %s
                                 """
-                                #print(f"SQL True: {sql_true} - Values: [{referenceFieldTest}, {inputFieldTest}, {idDinamicModel}]")
                                 inner_cursor.execute(sql_true, [referenceFieldTest, inputFieldTest, idDinamicModel])
 
                         else:
@@ -281,7 +272,6 @@ def autosaveForm(request):
                                     SET userChoice = FALSE
                                     WHERE referencefield = %s AND iduserdata = %s
                                 """
-                                #print(f"SQL False (empty): {sql_false} - Values: [{referenceFieldTest}, {idDinamicModel}]")
                                 inner_cursor.execute(sql_false, [referenceFieldTest, idDinamicModel])
                     else:
                         new_field_matching = FieldMatching.objects.create(
@@ -298,7 +288,6 @@ def autosaveForm(request):
                                 SET userChoice = TRUE
                                 WHERE referencefield = %s AND inputfield = %s AND iduserdata = %s
                             """
-                            #print(f"SQL True (new): {sql_true} - Values: [{referenceFieldTest}, {inputFieldTest}, {idDinamicModel}]")
                             inner_cursor.execute(sql_true, [referenceFieldTest, inputFieldTest, idDinamicModel])
 
             return HttpResponse("Dados salvos automaticamente", status=200)
@@ -358,10 +347,8 @@ def processForm(request):
             data = json.loads(request.body)
             idDinamicModel = data.pop('userDataId', None)
             userId = CustomUser.objects.get(username=request.user).id
-            #print("o userid é: ", userId)
 
             with connection.cursor() as cursor:
-                # Consulta para obter o nome da tabela
                 sql = """
                     SELECT api_modelodinamico."matchingTableName"
                     FROM api_modelodinamico 
@@ -369,7 +356,6 @@ def processForm(request):
                 """
                 cursor.execute(sql, (idDinamicModel, userId))
 
-                #print(sql)
                 matchingTableName = cursor.fetchone()[0]
 
 
@@ -423,41 +409,36 @@ def generateReport(iduserdata):
     doc = SimpleDocTemplate(buffer, pagesize=letter)
     elements = []
 
-    # Definindo estilos
     sampleStyles = getSampleStyleSheet()
     sampleStyles.add(ParagraphStyle(name='Bold', parent=sampleStyles["Normal"], fontName='Helvetica-Bold'))
 
-    # Estilo para o cabeçalho com o matchingTableName
     header_style = ParagraphStyle(name='Header', parent=sampleStyles["Normal"])
     header_style.fontSize = 8
 
-    # Obtendo o matchingTableName do primeiro FieldMatching
     matchingTableName = fieldMatchings.first().matchingTableName
 
     elements.append(Paragraph(matchingTableName, header_style))
     elements.append(Spacer(1, 12))  # Espaço entre o cabeçalho e o conteúdo
 
-    # Adicionando o logo
     logo_path = os.path.join('frontend', 'static', 'images', 'logoSemFundo.png')
     if os.path.exists(logo_path):
         logo = Image(logo_path, width=100, height=50)
         elements.append(logo)
 
-    # Adicionando os títulos com estilos personalizados
     title_style = ParagraphStyle(name='Title', parent=sampleStyles["Title"])
     title_style.fontSize = 16
     title_style.textColor = colors.black
-    title_style.alignment = 1  # centralizar o texto
+    title_style.alignment = 1 
     title_style.fontName = 'Helvetica'
-    title_style.wordWrap = 'LTR'  # alinhar texto à esquerda
+    title_style.wordWrap = 'LTR'
     elements.append(Paragraph("Relatório de Conformidade", title_style))
 
     heading3_style = ParagraphStyle(name='Heading3', parent=sampleStyles["Heading3"])
     heading3_style.fontSize = 14
     heading3_style.textColor = colors.grey
-    heading3_style.alignment = 1  # centralizar o texto
+    heading3_style.alignment = 1  
     heading3_style.fontName = 'Helvetica'
-    heading3_style.wordWrap = 'LTR'  # alinhar texto à esquerda
+    heading3_style.wordWrap = 'LTR'
     elements.append(Paragraph("Comparação entre Modelo de Referência e Arquivo de Entrada", heading3_style))
 
     for tableName, matches in tableData.items():
@@ -508,23 +489,19 @@ def generateReport(iduserdata):
 @permission_classes([IsAuthenticated])
 def unfinishedMatching(request):
     try:
-        # Obtém o ID do usuário autenticado
         userId = CustomUser.objects.get(username=request.user).id
         
         print("User id é:", userId)
 
-        # Filtra os modelos dinâmicos associados ao ID do usuário
         userModels = ModeloDinamico.objects.filter(iduser=userId, isConcluded=False).values()
         return JsonResponse(list(userModels), safe=False)
     except CustomUser.DoesNotExist:
-        # Se o usuário não existir, retorna uma lista vazia
         return JsonResponse([], safe=False)
 
 @api_view(['POST'])
 @csrf_exempt 
 def isConcluded(request):
     if request.method == 'POST':
-        # Obtém os dados do corpo da requisição no formato JSON
         data = request.data
         userDataId = data.get('userDataId')
         isConcluded = data.get('isConcluded')
@@ -547,33 +524,24 @@ def isConcluded(request):
 @permission_classes([IsAuthenticated])
 def userHistory(request):
     try:
-        # Obtém o ID do usuário autenticado
         userId = CustomUser.objects.get(username=request.user).id
-        # Filtra os modelos dinâmicos associados ao ID do usuário
         userModels = ModeloDinamico.objects.filter(iduser=userId, isConcluded=True).values()
-        # Retorna os modelos dinâmicos como uma resposta JSON
         return JsonResponse(list(userModels), safe=False)
     except CustomUser.DoesNotExist:
-        # Se o usuário não existir, retorna uma lista vazia
         return JsonResponse([], safe=False)
 
 @api_view(['GET'])
 def downloadPdf(request, pdf_id):
     try:
-        # Recupere o objeto ModeloDinamico pelo ID
         model = get_object_or_404(ModeloDinamico, id=pdf_id)
 
-        # Nome completo do arquivo
         file_name = os.path.basename(model.pdfFile.path)
         print("nome do arquivo", file_name)
         
-        # Parte inicial do caminho absoluto
         caminho_base = 'C:/TCC/projeto-final-DSW/projeto/media/'
 
-        # Concatenar parte inicial do caminho com o caminho do banco de dados
         caminho_absoluto = os.path.join(caminho_base, model.pdfFile.path)
         
-        # Abra o arquivo PDF e leia o conteúdo
         with open(caminho_absoluto, 'rb') as pdf_file:
             response = HttpResponse(pdf_file.read(), content_type='application/pdf')
             response['Content-Disposition'] = f'attachment; filename="{file_name}"'
@@ -632,14 +600,6 @@ def login(request):
         print("esse é o token_key", token.key)
         print("esse é o user_info", user_info)
 
-        # Crie um objeto HttpRequest apropriado
-        #django_request = HttpRequest()
-        #django_request.method = 'POST'
-        #django_request.POST = request.data
-
-        # Chame a função login() passando o objeto HttpRequest
-        #login(django_request, user)
-
         return Response({'token': token.key, 'user_info': user_info}, status=status.HTTP_200_OK)
     else:
         return Response({'error': 'Credenciais inválidas'}, status=status.HTTP_401_UNAUTHORIZED)
@@ -691,4 +651,3 @@ def generateFieldDescription():
     insert_sql += ",\n".join(insert_statements)
     print(insert_sql)
     return insert_sql
-

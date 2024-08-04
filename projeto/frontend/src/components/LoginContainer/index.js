@@ -9,8 +9,8 @@ import { usePaths } from '../Utils/utils';
 import { useUser } from '../Utils/user-utils';
 import { Eye, EyeSlash } from '../library/icons';
 import { Field } from '../library/inputs';
-import { useToken } from '../../TokenContext'; // Importe o hook useToken
-import Logo from '../../../static/images/logoSemFundo.png'; // Importe sua logo
+import { useToken } from '../../TokenContext'; 
+import Logo from '../../../static/images/logoSemFundo.png';
 
 const schema = Yup.object().shape({
     username: Yup.string().required('Campo obrigatório'),
@@ -24,16 +24,16 @@ const LoginContainer = () => {
     const paths = usePaths();
     const history = useHistory();
     const { updateUser } = useUser();
-    const { setToken } = useToken(); // Use o hook useToken para acessar a função setToken do contexto
+    const { setToken } = useToken();
 
     const isMounted = useRef(true);
     const [showPassword, setShowPassword] = useState(false);
-    const [csrfToken, setCsrfToken] = useState(''); // Definindo csrfToken aqui
+    const [csrfToken, setCsrfToken] = useState('');
     const [isValid, setIsValid] = useState(false);
     const [isDirty, setIsDirty] = useState(false);
 
     useEffect(() => {
-        // Obter o token CSRF do cookie e definir no estado
+        
         const csrfTokenFromCookie = getCookie('csrftoken');
         setCsrfToken(csrfTokenFromCookie);
         return () => (isMounted.current = false);
@@ -41,7 +41,7 @@ const LoginContainer = () => {
 
     const handleSubmit = async (values, { setSubmitting, setErrors }) => {
         try {
-            // Incluir o token CSRF no cabeçalho da solicitação
+            
             const response = await axios.post('/api/login/', values, { headers: { 'X-CSRFToken': csrfToken } });
             if (isMounted.current) {
                 localStorage.setItem('token', response.data.token);
@@ -65,7 +65,7 @@ const LoginContainer = () => {
         }
     };
 
-    // Função para obter o cookie CSRF
+ 
     const getCookie = (name) => {
         const cookieValue = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
         console.log(cookieValue)

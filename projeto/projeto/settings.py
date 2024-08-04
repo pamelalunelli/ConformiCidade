@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'frontend.apps.FrontendConfig',
     'corsheaders',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
@@ -100,14 +101,14 @@ DATABASES = {
         'PORT': '5432',
     }
 
-    #'default': {
+    # 'default': {
     #    'ENGINE': 'django.db.backends.postgresql',
     #    'NAME': 'conformicidade',
     #    'USER': 'postgres',
-    #    'PASSWORD': 'Rb5!!!!!',
-    #    'HOST': 'conformicidade.postgres.database.azure.com',
-    #    'PORT': '5432',
-    #}
+    #     'PASSWORD': 'Rb5!!!!!',
+    #     'HOST': 'conformicidade.postgres.database.azure.com',
+    #     'PORT': '5432',
+    # }
 }
 
 # Password validation
